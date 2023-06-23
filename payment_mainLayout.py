@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget,QVBoxLayout, QLabel, QHBoxLayout, QFileDialog, QApplication, QLineEdit, QPushButton
+from PySide6.QtCore import Slot
 
 class PaymentLayout(QVBoxLayout):
     def __init__(self):
@@ -30,7 +31,7 @@ class PaymentLayout(QVBoxLayout):
         self.addLayout(layout_attn_upload)
         self.addWidget(btn_gen_payment_invoice)
         
-        
+    @Slot()
     def btn_browse_attn_file_clicked(self):
         file_dialog = QFileDialog()
         file_url = QFileDialog.getOpenFileName(file_dialog,"Open Attendance Sheet", "C:/", "Excel Files (*.xls *.xlsm *.xlsx *.xlsb *xlam)")
@@ -38,6 +39,7 @@ class PaymentLayout(QVBoxLayout):
         # set input field to selected file
         self.input_attn_url.setText(file_url[0])
 
+    @Slot()
     def btn_gen_payment_invoice_clicked(self):
         # TODO: check to see if acceptable input
         # TODO: where to implement layout change
@@ -46,13 +48,14 @@ class PaymentLayout(QVBoxLayout):
 
 # TODO: DELETE below code once integrated into whole app
 
-# initialise the event loop listener
-app = QApplication()
-# initialise main window and show
-main_window = QWidget()
-layout = PaymentLayout()
-main_window.setLayout(layout)
-main_window.show()
+if __name__ == '__main__':
+    # initialise the event loop listener
+    app = QApplication()
+    # initialise main window and show
+    main_window = QWidget()
+    layout = PaymentLayout()
+    main_window.setLayout(layout)
+    main_window.show()
 
-# start event loop listener
-app.exec()
+    # start event loop listener
+    app.exec()
