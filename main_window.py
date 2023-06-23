@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QGridLayout, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
+from payment_mainLayout import PaymentLayout
 
 class MainWindow(QMainWindow):
     def __init__(self, app):
@@ -13,7 +14,10 @@ class MainWindow(QMainWindow):
         # set up our menu bar
         main_menu = self.menuBar()
         emp_menu = main_menu.addMenu('Employees')
-        file_menu = main_menu.addMenu('Payment')
+
+        payment_menu = main_menu.addMenu('Payment')
+        action_pay_summary = payment_menu.addAction('Summary')
+        action_pay_summary.triggered.connect(self.payment_action_clicked)
 
         self.widget = QWidget()
         self.setCentralWidget(self.widget)
@@ -23,4 +27,10 @@ class MainWindow(QMainWindow):
 
     def add_emp(self):
         pass
+
+    def payment_action_clicked(self):
+        payment_mainLayout = PaymentLayout()
+        self.change_layout(payment_mainLayout)
+
+
         
