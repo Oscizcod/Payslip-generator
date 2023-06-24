@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QStackedLayout, QFormLayout, QLineEdit
-from payment_summaryLayout import PaymentInvoiceLayout
+from payment_invoiceLayout import PaymentInvoiceLayout
 from PySide6.QtCore import Slot
 
 class MainWindow(QMainWindow):
