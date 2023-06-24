@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget,QVBoxLayout, QLabel, QHBoxLayout, QFileDialog, QApplication, QLineEdit, QPushButton
 from PySide6.QtCore import Slot
 
-class PaymentLayout(QVBoxLayout):
+class PaymentInvoiceLayout(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -25,11 +25,12 @@ class PaymentLayout(QVBoxLayout):
         btn_gen_payment_invoice.clicked.connect(self.btn_gen_payment_invoice_clicked)
 
         # add all widgets and layouts to global layout
-        self.addWidget(label_attn_file_upload)
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(label_attn_file_upload)
         layout_attn_upload.addWidget(self.input_attn_url)
         layout_attn_upload.addWidget(btn_browse_attn_file)
-        self.addLayout(layout_attn_upload)
-        self.addWidget(btn_gen_payment_invoice)
+        self.layout().addLayout(layout_attn_upload)
+        self.layout().addWidget(btn_gen_payment_invoice)
         
     @Slot()
     def btn_browse_attn_file_clicked(self):
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     app = QApplication()
     # initialise main window and show
     main_window = QWidget()
-    layout = PaymentLayout()
+    layout = PaymentInvoiceLayout()
     main_window.setLayout(layout)
     main_window.show()
 
