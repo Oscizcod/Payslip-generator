@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
 import os.path
 import os
 from emp_newLayout import EmpNewLayout
+from PySide6.QtCore import Slot
 
 class EmpSummaryLayout(QWidget):
     def __init__(self):
@@ -25,6 +26,7 @@ class EmpSummaryLayout(QWidget):
         layout_top_level.addWidget(btn_new_emp)
         self.setLayout(layout_top_level)
 
+    @Slot()
     def btn_new_emp_clicked(self):
         dialog_new_emp = EmpNewLayout(self)
         dialog_new_emp.exec()
