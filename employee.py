@@ -7,7 +7,7 @@ class Employee():
 
     def __init__(self, full_name, biometric_name, nric):
         # instantiate all instance vars
-        self.full_name = full_name
+        self.full_name = full_name.upper()
         self.biometric_name = biometric_name
         self.nric = nric 
 
@@ -24,3 +24,5 @@ class Employee():
         else:
             pass
         
+    def __str__(self):
+        return 'Employee: {}\n'.format(self.full_name) + 'NRIC: {}\n'.format(self.nric) + 'Biometric name: {}'.format(self.biometric_name) 

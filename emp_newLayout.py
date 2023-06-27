@@ -1,9 +1,12 @@
 from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog, QMessageBox
 from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 from employee import Employee
 
 class EmpNewLayout(QDialog):
+    # create custom signal
+    file_updated = Signal()
+
     def __init__(self, widget):
         super().__init__(widget)
 
@@ -63,6 +66,10 @@ class EmpNewLayout(QDialog):
                         # save employee to file-based db
                         with open('employees.txt', 'a', encoding='utf-8') as f:
                             f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
+                        
+                        # emit signal
+                        self.file_updated.emit()
+
                         # close dialog
                         self.done(0)
                     else:

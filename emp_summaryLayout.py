@@ -1,127 +1,73 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
 import os.path
 import os
 from emp_newLayout import EmpNewLayout
-from PySide6.QtCore import Slot
+from employee import Employee
+from PySide6.QtCore import Slot, Signal
 
 class EmpSummaryLayout(QWidget):
+    # create custom signal to update layout
+    update_emp_summ_layout = Signal()
+
     def __init__(self):
         super().__init__()
 
         # layout for summary page
         layout_top_level = QVBoxLayout()
         # label if no employees registered
-        label_top = QLabel()
+        self.label_top = QLabel()
         btn_new_emp = QPushButton()
         btn_new_emp.setText('New')
         btn_new_emp.clicked.connect(self.btn_new_emp_clicked)
         
         # check if employees.txt exists or if empty
         if os.path.exists('employees.txt') and os.stat('employees.txt').st_size != 0:
-            label_top.setText('Employee summary: ')
-        else:
-            label_top.setText('No employees registered.')
+            self.label_top.setText('Employee summary: ')
+            layout_top_level.addWidget(self.label_top)
 
-        layout_top_level.addWidget(label_top)
+            with open('employees.txt', 'r', encoding='utf-8') as emps:
+                for emp in emps:
+                    emp_details = emp.split(';')
+
+                    # create employee object
+                    obj_emp = Employee(emp_details[0], emp_details[1], emp_details[2].strip())
+                    label_emp = QLabel()
+                    label_emp.setText(obj_emp.__str__())
+                    
+                    # create horizontal layout for emp details
+                    layout_emp_details = QHBoxLayout()
+                    layout_emp_details.addWidget(label_emp)
+
+                    # add buttons for each employee
+                    layout_emp_btns = QVBoxLayout()
+                    btn_emp_edit = QPushButton()
+                    btn_emp_edit.setText('Edit')
+                    btn_emp_remove = QPushButton()
+                    btn_emp_remove.setText('Remove')
+
+                    layout_emp_btns.addWidget(btn_emp_edit)
+                    layout_emp_btns.addWidget(btn_emp_remove)
+                    layout_emp_details.addLayout(layout_emp_btns)
+                    layout_top_level.addLayout(layout_emp_details)
+                    
+        else:
+            self.label_top.setText('No employees registered.')
+            layout_top_level.addWidget(self.label_top)
+
+
         layout_top_level.addWidget(btn_new_emp)
         self.setLayout(layout_top_level)
 
+        # initialise emp_newLayout
+        self.dialog_new_emp = EmpNewLayout(self)
+        # connect file_created signal to custom slot
+        self.dialog_new_emp.file_updated.connect(self.update_layout)
+        
     @Slot()
     def btn_new_emp_clicked(self):
-        dialog_new_emp = EmpNewLayout(self)
-        dialog_new_emp.exec()
+        self.dialog_new_emp.exec()
 
-
-
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog, QMessageBox
-from PySide6.QtGui import QRegularExpressionValidator
-from PySide6.QtCore import Slot
-from employee import Employee
-
-class EmpNewLayout(QDialog):
-    def __init__(self, widget):
-        super().__init__(widget)
-
-        # Label for instruction
-        label_instruction = QLabel()
-        label_instruction.setText('Please fill in the following details for the new employee:')
-
-        # use form to fill out details
-        form_emp_new = QFormLayout()
-        self.edit_full_name = QLineEdit()
-        validate_full_name = QRegularExpressionValidator(r'\D+')
-        form_emp_new.addRow('Full name: ', self.edit_full_name)
-        self.edit_full_name.setValidator(validate_full_name)
-        
-        self. edit_biometric_name = QLineEdit()
-        validate_biometric_name = QRegularExpressionValidator(r'.+')
-        form_emp_new.addRow('Biometric name: ', self.edit_biometric_name)
-        self.edit_biometric_name.setPlaceholderText('Enter name exactly as in biometric device')
-        self.edit_biometric_name.setValidator(validate_biometric_name)
-        
-        self.edit_nric = QLineEdit()
-        validate_nric = QRegularExpressionValidator(r'\d{6}-\d{2}-\d{4}')
-        form_emp_new.addRow('NRIC: ', self.edit_nric)
-        self.edit_nric.setPlaceholderText('E.g. 931102-03-2398')
-        self.edit_nric.setValidator(validate_nric)
-
-        # add form submission buttons
-        btn_ok = QPushButton()
-        btn_ok.setText('OK')
-        btn_ok.clicked.connect(self.btn_ok_clicked)
-        btn_cancel = QPushButton()
-        btn_cancel.setText('Cancel')
-        btn_cancel.clicked.connect(self.btn_cancel_clicked)
-        layout_btns = QHBoxLayout()
-        layout_btns.addWidget(btn_ok)
-        layout_btns.addWidget(btn_cancel)
-
-        # construct final layout
-        self.setWindowTitle('Add new employee')
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(label_instruction)
-        self.layout().addLayout(form_emp_new)
-        self.layout().addLayout(layout_btns)
-        
-    # slot for ok btn
     @Slot()
-    def btn_ok_clicked(self):
-        # details all validated, save to text file
-        if self.edit_full_name.hasAcceptableInput():
-            if self.edit_biometric_name.hasAcceptableInput():
-                if self.edit_nric.hasAcceptableInput():
-                    # check if duplicate entry (nric is unique)
-                    if self.edit_nric.text() not in Employee.employees:
-                        # add employee to existing dictionary of employees
-                        Employee.employees[self.edit_nric.text()] = (self.edit_full_name.text().upper(), self.edit_biometric_name.text())
-
-                        # save employee to file-based db
-                        with open('employees.txt', 'a', encoding='utf-8') as f:
-                            f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
-                        # close dialog
-                        self.done(0)
-                    else:
-                        QMessageBox.critical(self, "Input Error",
-                               'You already have another staff with identical NRIC.\n' +
-                               'Please check that your entries are correct.',
-                               QMessageBox.Ok)
-                else:
-                    QMessageBox.critical(self, "Input Error",
-                               "Please fill in the NRIC in the correct format.\n" +
-                               "XXXXXX-XX-XXXX",
-                               QMessageBox.Ok)
-            else:
-                QMessageBox.critical(self, "Input Error",
-                               "Please fill in the biometric name.",
-                               QMessageBox.Ok)
-        else:
-            QMessageBox.critical(self, "Input Error",
-                               "Please fill in the full name.",
-                               QMessageBox.Ok)
-        
-    # slot for cancel btn
-    @Slot()
-    def btn_cancel_clicked(self):
-        # close dialog
-        self.done(0)
-
+    def update_layout(self):
+        # emit custom signal for main_window.py
+        self.update_emp_summ_layout.emit()
