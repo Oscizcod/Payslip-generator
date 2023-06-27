@@ -58,13 +58,11 @@ class MainWindow(QMainWindow):
         action_pay_summary.triggered.connect(lambda: self.change_layout(1))
         action_emp_summary.triggered.connect(lambda: self.change_layout(2))
         action_file_quit.triggered.connect(self.action_file_quit_clicked)
-        
 
     @Slot()
     def change_layout(self, index):
         self.layout_stacked.setCurrentIndex(index)
 
+    @Slot()
     def action_file_quit_clicked(self):
         self.app.quit()
-
-        
