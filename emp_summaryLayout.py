@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
+from PySide6.QtCore import Slot, Signal
 import os.path
 import os
 from emp_newLayout import EmpNewLayout
 from employee import Employee
-from PySide6.QtCore import Slot, Signal
+from payment_invoiceLayout import PaymentInvoiceLayout
 
 class EmpSummaryLayout(QWidget):
     # create custom signal to update layout
@@ -44,9 +45,13 @@ class EmpSummaryLayout(QWidget):
                     btn_emp_edit.setText('Edit')
                     btn_emp_remove = QPushButton()
                     btn_emp_remove.setText('Remove')
+                    btn_emp_gen_payslip = QPushButton()
+                    btn_emp_gen_payslip.setText('Generate payslip')
+                    btn_emp_gen_payslip.clicked.connect(self.dialog_payment_invoice)
 
                     layout_emp_btns.addWidget(btn_emp_edit)
                     layout_emp_btns.addWidget(btn_emp_remove)
+                    layout_emp_btns.addWidget(btn_emp_gen_payslip)
                     layout_emp_details.addLayout(layout_emp_btns)
                     layout_top_level.addLayout(layout_emp_details)
                     
@@ -71,3 +76,8 @@ class EmpSummaryLayout(QWidget):
     def update_layout(self):
         # emit custom signal for main_window.py
         self.update_emp_summ_layout.emit()
+
+    @Slot()
+    def dialog_payment_invoice(self):
+        dialog_gen_invoice = PaymentInvoiceLayout()
+        dialog_gen_invoice.exec()

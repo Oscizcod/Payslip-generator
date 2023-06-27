@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QWidget,QVBoxLayout, QLabel, QHBoxLayout, QFileDialog, QApplication, QLineEdit, QPushButton
+from PySide6.QtWidgets import QWidget,QVBoxLayout, QLabel, QHBoxLayout, QFileDialog, QApplication, QLineEdit, QPushButton, QDialog
 from PySide6.QtCore import Slot
 
-class PaymentInvoiceLayout(QWidget):
+class PaymentInvoiceLayout(QDialog):
     def __init__(self):
         super().__init__()
 
@@ -21,8 +21,8 @@ class PaymentInvoiceLayout(QWidget):
 
         # add push button for generating payment invoice
         btn_gen_payment_invoice = QPushButton()
-        btn_gen_payment_invoice.setText('Generate Payment Invoice')
-        btn_gen_payment_invoice.clicked.connect(self.btn_gen_payment_invoice_clicked)
+        btn_gen_payment_invoice.setText('OK')
+        btn_gen_payment_invoice.clicked.connect(self.btn_ok_clicked)
 
         # add all widgets and layouts to global layout
         self.setLayout(QVBoxLayout())
@@ -41,7 +41,7 @@ class PaymentInvoiceLayout(QWidget):
         self.input_attn_url.setText(file_url[0])
 
     @Slot()
-    def btn_gen_payment_invoice_clicked(self):
+    def btn_ok_clicked(self):
         # TODO: check to see if acceptable input
         # TODO: where to implement layout change
         pass

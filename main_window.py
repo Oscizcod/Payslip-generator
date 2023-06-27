@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QStackedLayout, QFormLayout, QLineEdit
-from payment_invoiceLayout import PaymentInvoiceLayout
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QStackedLayout
 from emp_summaryLayout import EmpSummaryLayout
 from PySide6.QtCore import Slot
 import os
@@ -31,10 +30,7 @@ class MainWindow(QMainWindow):
         self.layout_stacked = QStackedLayout()
         # add home page layout to stack - index 0
         self.layout_stacked.addWidget(self.layout_home_page)
-        # add payment summary layout to stack - index 1
-        self.layout_pay_summary = PaymentInvoiceLayout()
-        self.layout_stacked.addWidget(self.layout_pay_summary)
-        # # add new employment layout to stack - index 2
+        # # add new employment layout to stack - index 1
         self.create_emp_summ_layout()
 
         # add stacked layout to main layout
@@ -49,14 +45,10 @@ class MainWindow(QMainWindow):
 
         emp_menu = main_menu.addMenu('Employees')
         action_emp_summary = emp_menu.addAction('Summary')
-
-        payment_menu = main_menu.addMenu('Payment')
-        action_pay_summary = payment_menu.addAction('Summary')
         
         # slots for menu actions
         action_file_home.triggered.connect(lambda: self.change_layout(0))
-        action_pay_summary.triggered.connect(lambda: self.change_layout(1))
-        action_emp_summary.triggered.connect(lambda: self.change_layout(2))
+        action_emp_summary.triggered.connect(lambda: self.change_layout(1))
         action_file_quit.triggered.connect(self.action_file_quit_clicked)
 
     @Slot()
@@ -72,13 +64,13 @@ class MainWindow(QMainWindow):
         if self.layout_stacked.count() > 2:
             self.layout_stacked.removeWidget(self.layout_emp_summary)
 
-        # add new employment layout to stack - index 2
+        # add new employment layout to stack - index 1
         self.layout_emp_summary = EmpSummaryLayout()
-        self.layout_stacked.insertWidget(2,self.layout_emp_summary)
+        self.layout_stacked.insertWidget(1,self.layout_emp_summary)
         
         # check for signal from emp_summaryLayout
         self.layout_emp_summary.update_emp_summ_layout.connect(self.create_emp_summ_layout)
         
         # set stacked layout to employees summary page 
-        self.layout_stacked.setCurrentIndex(2)
+        self.layout_stacked.setCurrentIndex(1)
 
