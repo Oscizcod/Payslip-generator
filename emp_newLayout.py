@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QWidget, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog, QMessageBox
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtCore import Slot
+from employee import Employee
 
 class EmpNewLayout(QDialog):
     def __init__(self, widget):
@@ -11,12 +13,22 @@ class EmpNewLayout(QDialog):
 
         # use form to fill out details
         form_emp_new = QFormLayout()
-        edit_full_name = QLineEdit()
-        form_emp_new.addRow('Full name: ', edit_full_name)
-        edit_biometric_name = QLineEdit()
-        form_emp_new.addRow('Biometric name: ', edit_biometric_name)
-        edit_nric = QLineEdit()
-        form_emp_new.addRow('NRIC: ', edit_nric)
+        self.edit_full_name = QLineEdit()
+        validate_full_name = QRegularExpressionValidator(r'\D+')
+        form_emp_new.addRow('Full name: ', self.edit_full_name)
+        self.edit_full_name.setValidator(validate_full_name)
+        
+        self. edit_biometric_name = QLineEdit()
+        validate_biometric_name = QRegularExpressionValidator(r'.+')
+        form_emp_new.addRow('Biometric name: ', self.edit_biometric_name)
+        self.edit_biometric_name.setPlaceholderText('Enter name exactly as in biometric device')
+        self.edit_biometric_name.setValidator(validate_biometric_name)
+        
+        self.edit_nric = QLineEdit()
+        validate_nric = QRegularExpressionValidator(r'\d{6}-\d{2}-\d{4}')
+        form_emp_new.addRow('NRIC: ', self.edit_nric)
+        self.edit_nric.setPlaceholderText('E.g. 931102-03-2398')
+        self.edit_nric.setValidator(validate_nric)
 
         # add form submission buttons
         btn_ok = QPushButton()
@@ -39,9 +51,41 @@ class EmpNewLayout(QDialog):
     # slot for ok btn
     @Slot()
     def btn_ok_clicked(self):
-        pass
+        # details all validated, save to text file
+        if self.edit_full_name.hasAcceptableInput():
+            if self.edit_biometric_name.hasAcceptableInput():
+                if self.edit_nric.hasAcceptableInput():
+                    # check if duplicate entry (nric is unique)
+                    if self.edit_nric.text() not in Employee.employees:
+                        # add employee to existing dictionary of employees
+                        Employee.employees[self.edit_nric.text()] = (self.edit_full_name.text().upper(), self.edit_biometric_name.text())
+
+                        # save employee to file-based db
+                        with open('employees.txt', 'a', encoding='utf-8') as f:
+                            f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
+                        # close dialog
+                        self.done(0)
+                    else:
+                        QMessageBox.critical(self, "Input Error",
+                               'You already have another staff with identical NRIC.\n' +
+                               'Please check that your entries are correct.',
+                               QMessageBox.Ok)
+                else:
+                    QMessageBox.critical(self, "Input Error",
+                               "Please fill in the NRIC in the correct format.\n" +
+                               "XXXXXX-XX-XXXX",
+                               QMessageBox.Ok)
+            else:
+                QMessageBox.critical(self, "Input Error",
+                               "Please fill in the biometric name.",
+                               QMessageBox.Ok)
+        else:
+            QMessageBox.critical(self, "Input Error",
+                               "Please fill in the full name.",
+                               QMessageBox.Ok)
         
     # slot for cancel btn
     @Slot()
     def btn_cancel_clicked(self):
-        pass
+        # close dialog
+        self.done(0)

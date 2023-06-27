@@ -1,9 +1,26 @@
-# class for employees
+import os.path
+import os
 
 class Employee():
-    def __init__(self, name=None, dob=None, start_working_date=None, end_working_date=None, shifts=None ):
-        self.name = name
-        self.dob = dob
-        self.start_working_date = start_working_date
-        self.end_working_date = end_working_date
-        self.shifts = shifts
+    employees = {}
+    URL_emps = 'employees.txt'
+
+    def __init__(self, full_name, biometric_name, nric):
+        # instantiate all instance vars
+        self.full_name = full_name
+        self.biometric_name = biometric_name
+        self.nric = nric 
+
+    @classmethod              
+    def load_employees(cls):
+        if os.path.exists(cls.URL_emps) and os.stat(cls.URL_emps).st_size != 0:
+            with open(cls.URL_emps, 'r', encoding='utf-8') as emps:
+                for emp in emps:
+                    emp_details = emp.split(';')
+
+                    # use nric as key
+                    # store (full name, biom name) as 2-tuple
+                    cls.employees[emp_details[2].strip()] = (emp_details[0], emp_details[1])
+        else:
+            pass
+        
