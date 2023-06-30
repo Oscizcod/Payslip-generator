@@ -18,7 +18,7 @@ class EmpSummaryLayout(QWidget):
         # label if no employees registered
         self.label_top = QLabel()
         btn_new_emp = QPushButton()
-        btn_new_emp.setText('New')
+        btn_new_emp.setText('Add new employee')
         btn_new_emp.clicked.connect(self.btn_new_emp_clicked)
         
         # check if employees.txt exists or if empty
@@ -34,26 +34,8 @@ class EmpSummaryLayout(QWidget):
                     obj_emp = Employee(emp_details[0], emp_details[1], emp_details[2].strip())
                     label_emp = QLabel()
                     label_emp.setText(obj_emp.__str__())
-                    
-                    # create horizontal layout for emp details
-                    layout_emp_details = QHBoxLayout()
-                    layout_emp_details.addWidget(label_emp)
-
-                    # add buttons for each employee
-                    layout_emp_btns = QVBoxLayout()
-                    btn_emp_edit = QPushButton()
-                    btn_emp_edit.setText('Edit')
-                    btn_emp_remove = QPushButton()
-                    btn_emp_remove.setText('Remove')
-                    btn_emp_gen_payslip = QPushButton()
-                    btn_emp_gen_payslip.setText('Generate payslip')
-                    btn_emp_gen_payslip.clicked.connect(self.dialog_payment_invoice)
-
-                    layout_emp_btns.addWidget(btn_emp_edit)
-                    layout_emp_btns.addWidget(btn_emp_remove)
-                    layout_emp_btns.addWidget(btn_emp_gen_payslip)
-                    layout_emp_details.addLayout(layout_emp_btns)
-                    layout_top_level.addLayout(layout_emp_details)
+                    # append to top layout
+                    layout_top_level.addWidget(label_emp)
                     
         else:
             self.label_top.setText('No employees registered.')
@@ -76,8 +58,3 @@ class EmpSummaryLayout(QWidget):
     def update_layout(self):
         # emit custom signal for main_window.py
         self.update_emp_summ_layout.emit()
-
-    @Slot()
-    def dialog_payment_invoice(self):
-        dialog_gen_invoice = PaymentInvoiceLayout()
-        dialog_gen_invoice.exec()
