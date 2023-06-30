@@ -65,7 +65,7 @@ class EmpSummaryLayout(QWidget):
 
         # initialise emp_newLayout
         self.dialog_new_emp = EmpNewLayout(self)
-        # connect file_created signal to custom slot
+        # connect file_updated signal to custom slot
         self.dialog_new_emp.file_updated.connect(self.update_layout)
         
     @Slot()
