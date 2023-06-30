@@ -4,7 +4,6 @@ import os.path
 import os
 from emp_newLayout import EmpNewLayout
 from employee import Employee
-from payment_invoiceLayout import PaymentInvoiceLayout
 
 class EmpSummaryLayout(QWidget):
     # create custom signal to update layout
