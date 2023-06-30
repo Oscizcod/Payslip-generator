@@ -11,6 +11,7 @@ class PaymentInvoiceLayout(QDialog):
         # connect btn signals to slots
         self.btn_browse_attn_file.clicked.connect(self.btn_browse_attn_file_clicked)
         self.btn_gen_payment_invoice.clicked.connect(self.btn_ok_clicked)
+        self.btn_save_emp_details.clicked.connect(self.btn_save_clicked)
     
     def initUI(self):
         # inputs
@@ -144,4 +145,8 @@ class PaymentInvoiceLayout(QDialog):
     def btn_ok_clicked(self):
         # TODO: check to see if acceptable input
         # TODO: where to implement layout change
+        pass
+
+    @Slot()
+    def btn_save_clicked(self):
         pass
