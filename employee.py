@@ -5,11 +5,19 @@ class Employee():
     employees = {}
     URL_emps = 'employees.txt'
 
-    def __init__(self, full_name, biometric_name, nric):
+    def __init__(self, full_name, biometric_name, nric, working_days='',
+                 base_pay='', charge_ot='', charge_late='',
+                 charge_early=''):
         # instantiate all instance vars
         self.full_name = full_name.upper()
         self.biometric_name = biometric_name
         self.nric = nric 
+        self.working_days = working_days
+        self.base_pay = base_pay
+        self.charge_ot = charge_ot
+        self.charge_late = charge_late
+        self.charge_early = charge_early
+
 
     @classmethod              
     def load_employees(cls):
