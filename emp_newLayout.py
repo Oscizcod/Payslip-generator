@@ -194,12 +194,20 @@ class EmpNewLayout(QDialog):
         if self.is_ready_for_saving() :
             # check if duplicate entry (nric is unique)
             if self.edit_nric.text() not in Employee.employees:
-                # add employee to existing dictionary of employees
-                Employee.employees[self.edit_nric.text()] = (self.edit_full_name.text().upper(), self.edit_biometric_name.text())
+                # determine shifts
+                if self.checkbox_shift1.isChecked():
+                    shifts = '1'
+                else:
+                    shifts = '2'
 
-                # save employee to file-based db
-                with open('employees.txt', 'a', encoding='utf-8') as f:
-                    f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
+                if self.checkbox_shift3.isChecked():
+                    shifts += '3'
+
+                # add employee to existing dictionary of employees
+                Employee.get_employees()[self.edit_nric.text()] = Employee(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), 
+                                                                           self.edit_nric.text(), shifts, self.edit_base_pay.text(), 
+                                                                           self.edit_charge_overtime.text(), self.edit_charge_late_arr.text(),
+                                                                           self.edit_charge_early_dep.text())
                         
                 # emit signal
                 self.file_updated.emit()

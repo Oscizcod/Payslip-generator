@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QStacke
 from PySide6.QtCore import Slot
 from emp_summaryLayout import EmpSummaryLayout
 from company_summaryLayout import CoSummLayout
-from company import Company
+from employee import Employee
 
 class MainWindow(QMainWindow):
     def __init__(self, app):
@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def action_file_quit_clicked(self):
+        Employee.save_to_db()
         self.app.quit()
 
     @Slot()
@@ -71,3 +72,9 @@ class MainWindow(QMainWindow):
         self.action_file_quit = file_menu.addAction('Quit')
         emp_menu = main_menu.addMenu('Employees')
         self.action_emp_summary = emp_menu.addAction('Summary')
+
+    # define close event
+    # save changes to employees.txt before closing app
+    def closeEvent(self, event):
+        Employee.save_to_db()
+        event.accept()

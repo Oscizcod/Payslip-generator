@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QCloseEvent
 import sys
 from main_window import MainWindow
 from employee import Employee
@@ -7,7 +8,7 @@ from employee import Employee
 app = QApplication(sys.argv)
 
 # load employees from file db
-Employee.load_employees()
+Employee.load_from_db()
 
 # initialise main window and show
 main_window = MainWindow(app)

@@ -21,21 +21,15 @@ class EmpSummaryLayout(QWidget):
         btn_new_emp.clicked.connect(self.btn_new_emp_clicked)
         
         # check if employees.txt exists or if empty
-        if os.path.exists('employees.txt') and os.stat('employees.txt').st_size != 0:
+        if len(Employee.get_employees()) != 0:
             self.label_top.setText('Employee summary: ')
             layout_top_level.addWidget(self.label_top)
 
-            with open('employees.txt', 'r', encoding='utf-8') as emps:
-                for emp in emps:
-                    emp_details = emp.split(';')
-
-                    # create employee object
-                    obj_emp = Employee(emp_details[0], emp_details[1], emp_details[2].strip())
-                    label_emp = QLabel()
-                    label_emp.setText(obj_emp.__str__())
-                    # append to top layout
-                    layout_top_level.addWidget(label_emp)
-                    
+            for emp in Employee.get_employees().values():
+                label_emp = QLabel()
+                label_emp.setText(emp.__str__())
+                # append to top layout
+                layout_top_level.addWidget(label_emp)
         else:
             self.label_top.setText('No employees registered.')
             layout_top_level.addWidget(self.label_top)
