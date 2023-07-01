@@ -1,6 +1,5 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QStackedLayout, QGroupBox, QHBoxLayout
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QGroupBox, QHBoxLayout
 from PySide6.QtCore import Slot
-from emp_summaryLayout import EmpSummaryLayout
 from company import Company
 
 class CoSummLayout(QWidget):
@@ -19,8 +18,7 @@ class CoSummLayout(QWidget):
         label_epf_employee = QLabel()
         label_epf_employee.setText('Employee: ' + str(Company.get_epf_employee()*100) + '%')
         layout_shifts = self.shiftsUI()
-        label_closed = QLabel()
-        label_closed.setText(str(Company.get_closed()))
+        layout_closed = self.closedDaysUI()
 
         # create widget to insert into stacked layout
         # design layout for widget
@@ -42,8 +40,7 @@ class CoSummLayout(QWidget):
         self.layout().addWidget(frame_shifts)
         # closed days
         frame_closed = QGroupBox('Closed days')
-        frame_closed.setLayout(QHBoxLayout())
-        frame_closed.layout().addWidget(label_closed)
+        frame_closed.setLayout(layout_closed)
         self.layout().addWidget(frame_closed)
 
     def shiftsUI(self):
@@ -62,8 +59,34 @@ class CoSummLayout(QWidget):
             else:
                 time_end = details[1] + ' PM'
 
+            # get days spelt full
+            str_full_days = ''
+            for abbr_day in details[2]:
+                full_day = Company.get_dict_days()[abbr_day]
+                str_full_days += full_day + ', '
+            # remove right trailing comma
+            str_full_days = str_full_days.rstrip(', ')
+            # create label of shifts
             label_shifts = QLabel()
-            label_shifts.setText(shift + ': ' + time_start + ' to ' + time_end + ' on ' + str(details[2]))
+            label_shifts.setText(shift + ': ' + time_start + ' to ' + time_end + ' on\n' + str_full_days)
             layout_shifts.addWidget(label_shifts)
 
         return layout_shifts
+    
+    def closedDaysUI(self):
+        # define layout
+        layout_closed = QVBoxLayout()
+
+        # get days spelt full
+        str_closed_days = ''
+        for abbr_day in Company.get_closed():
+            full_day = Company.get_dict_days()[abbr_day]
+            str_closed_days += full_day + ', '
+        # remove right trailing comma
+        str_closed_days = str_closed_days.rstrip(', ')
+        # create label of shifts
+        label_closed = QLabel()
+        label_closed.setText(str_closed_days)
+        layout_closed.addWidget(label_closed)
+
+        return layout_closed
