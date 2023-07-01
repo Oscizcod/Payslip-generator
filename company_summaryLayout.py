@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QGroupBox, QHBoxLayout
-from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QGroupBox, QHBoxLayout, QPushButton
 from company import Company
 
 class CoSummLayout(QWidget):

@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog, QMessageBox, QFileDialog,  QGroupBox, QComboBox, QCheckBox
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QDialog, QMessageBox, QFileDialog,  QGroupBox, QCheckBox, QButtonGroup
+from PySide6.QtGui import QRegularExpressionValidator, QDoubleValidator
 from PySide6.QtCore import Slot, Signal
 from employee import Employee
+from company import Company
 
 
 class EmpNewLayout(QDialog):
@@ -19,6 +20,8 @@ class EmpNewLayout(QDialog):
         self.btn_gen_payment_invoice.clicked.connect(self.btn_ok_clicked)
         self.btn_save_emp_details.clicked.connect(self.btn_save_clicked)
         self.btn_cancel.clicked.connect(self.btn_cancel_clicked)
+
+        self.edit_base_pay.textEdited.connect(self.base_pay_changed)
 
     def initUI(self):
         # set window title
@@ -93,22 +96,31 @@ class EmpNewLayout(QDialog):
 
     def paymentUI(self):
         # define all inputs
-        edit_base_pay = QLineEdit()
-        edit_epf_employer = QLineEdit()
-        edit_epf_employee = QLineEdit()
-        edit_charge_overtime = QLineEdit()
-        edit_charge_late_arr = QLineEdit()
-        edit_charge_early_dep = QLineEdit()
+        validate_charges = QDoubleValidator()
+        validate_charges.setRange(0, 9999, 2)
+        self.edit_base_pay = QLineEdit()
+        self.edit_base_pay.setValidator(validate_charges)
+        self.edit_base_pay.setText('0')
+        self.edit_epf_employer = QLineEdit()
+        self.edit_epf_employer.setReadOnly(True)
+        self.edit_epf_employee = QLineEdit()
+        self.edit_epf_employee.setReadOnly(True)
+        self.edit_charge_overtime = QLineEdit()
+        self.edit_charge_overtime.setValidator(validate_charges)
+        self.edit_charge_late_arr = QLineEdit()
+        self.edit_charge_late_arr.setValidator(validate_charges)
+        self.edit_charge_early_dep = QLineEdit()
+        self.edit_charge_early_dep.setValidator(validate_charges)
 
         # create layout
         # use form for all inputs
         layout_payment = QFormLayout()
-        layout_payment.addRow('Base pay: RM', edit_base_pay)
-        layout_payment.addRow('EPF Employer contribution: RM', edit_epf_employer)
-        layout_payment.addRow('EPF Employee contribution: RM', edit_epf_employee)
-        layout_payment.addRow('Overtime charges: RM', edit_charge_overtime)
-        layout_payment.addRow('Late arrival charges: RM', edit_charge_late_arr)
-        layout_payment.addRow('Early departure charges: RM', edit_charge_early_dep)
+        layout_payment.addRow('Base pay: RM', self.edit_base_pay)
+        layout_payment.addRow('EPF Employer contribution: RM', self.edit_epf_employer)
+        layout_payment.addRow('EPF Employee contribution: RM', self.edit_epf_employee)
+        layout_payment.addRow('Overtime charges: RM', self.edit_charge_overtime)
+        layout_payment.addRow('Late arrival charges: RM', self.edit_charge_late_arr)
+        layout_payment.addRow('Early departure charges: RM', self.edit_charge_early_dep)
 
         # add form to groupbox
         frame_payment = QGroupBox('Payment info')
@@ -117,62 +129,49 @@ class EmpNewLayout(QDialog):
         return frame_payment
 
     def workingUI(self):
-        # define constants
-        WORKING_HOURS = self.generate_working_hrs()
-        WORKING_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
-                        'Friday', 'Saturday', 'Sunday']
-
         # define all inputs
-        edit_start_time = QComboBox()
-        edit_start_time.addItems(WORKING_HOURS)
-        edit_end_time = QComboBox()
-        edit_end_time.addItems(WORKING_HOURS)
-        # add options for checkbox
-        edit_work_mon = QCheckBox(WORKING_DAYS[0])
-        edit_work_tue = QCheckBox(WORKING_DAYS[1])
-        edit_work_wed = QCheckBox(WORKING_DAYS[2])
-        edit_work_thurs = QCheckBox(WORKING_DAYS[3])
-        edit_work_fri = QCheckBox(WORKING_DAYS[4])
-        edit_work_sat = QCheckBox(WORKING_DAYS[5])
-        edit_work_sun = QCheckBox(WORKING_DAYS[6])
-
+        self.checkbox_shift1 = QCheckBox()
+        self.checkbox_shift2 = QCheckBox()
+        self.checkbox_shift3 = QCheckBox()
+        # add shift 1 and 2 to same group
+        self.group_btns = QButtonGroup(self)
+        self.group_btns.setExclusive(True)
+        self.group_btns.addButton(self.checkbox_shift1, 1)
+        self.group_btns.addButton(self.checkbox_shift2, 2)
+       
         # create layout
-        # put start and end times horizontally
-        layout_timing = QHBoxLayout()
-        label_start_time = QLabel()
-        label_start_time.setText('Start time: ')
-        label_end_time = QLabel()
-        label_end_time.setText('End time: ')
-        layout_timing.addWidget(label_start_time)
-        layout_timing.addWidget(edit_start_time)
-        layout_timing.addWidget(label_end_time)
-        layout_timing.addWidget(edit_end_time)
+        layout_top_working = QVBoxLayout()
         # put all in a group box with vertical layout
         frame_working = QGroupBox('Working info')
-        layout_top_working = QVBoxLayout()
         frame_working.setLayout(layout_top_working)
-        label_working_days = QLabel()
-        label_working_days.setText('Select working days: ')
-        frame_working.layout().addLayout(layout_timing)
-        frame_working.layout().addWidget(label_working_days)
-        frame_working.layout().addWidget(edit_work_mon)
-        frame_working.layout().addWidget(edit_work_tue)
-        frame_working.layout().addWidget(edit_work_wed)
-        frame_working.layout().addWidget(edit_work_thurs)
-        frame_working.layout().addWidget(edit_work_fri)
-        frame_working.layout().addWidget(edit_work_sat)
-        frame_working.layout().addWidget(edit_work_sun)
+        label_instruction = QLabel()
+        label_instruction.setText('Select one of the shifts below:')
+        layout_top_working.addWidget(label_instruction)
+        # add horizontal layout for shifts 1 and 2
+        layout_shifts12 = QHBoxLayout()
+        layout_shifts12.addWidget(self.checkbox_shift1)
+        label_shift1 = QLabel()
+        label_shift1.setText('Shift 1')
+        layout_shifts12.addWidget(label_shift1)
+        layout_shifts12.addWidget(self.checkbox_shift2)
+        label_shift2 = QLabel()
+        label_shift2.setText('Shift 2')
+        layout_shifts12.addWidget(label_shift2)
+        layout_top_working.addLayout(layout_shifts12)
+        # add shift 3
+        layout_shift3 = QHBoxLayout()
+        label_instruction2 = QLabel()
+        label_instruction2.setText('Select if appropriate:')
+        layout_shift3.addWidget(self.checkbox_shift3)
+        label_shift3 = QLabel()
+        label_shift3.setText('Shift 3')
+        layout_shift3.addWidget(label_shift3)
+        layout_top_working.addWidget(label_instruction2)
+        layout_top_working.addLayout(layout_shift3)
+        # add layout to frame
+        frame_working.setLayout(layout_top_working)
 
         return frame_working
-
-    def generate_working_hrs(self):
-        working_hrs = []
-
-        for hr in range(7, 23):
-            working_hrs.append(str(hr) + ':00')
-            working_hrs.append(str(hr) + ':30')
-
-        return working_hrs
     
     @Slot()
     def btn_browse_attn_file_clicked(self):
@@ -185,51 +184,60 @@ class EmpNewLayout(QDialog):
 
     @Slot()
     def btn_ok_clicked(self):
+        # initialise Payslip instance
         pass
 
-    
     # slot for save btn
     @Slot()
     def btn_save_clicked(self):
         # details all validated, save to text file
+        if self.is_ready_for_saving() :
+            # check if duplicate entry (nric is unique)
+            if self.edit_nric.text() not in Employee.employees:
+                # add employee to existing dictionary of employees
+                Employee.employees[self.edit_nric.text()] = (self.edit_full_name.text().upper(), self.edit_biometric_name.text())
+
+                # save employee to file-based db
+                with open('employees.txt', 'a', encoding='utf-8') as f:
+                    f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
+                        
+                # emit signal
+                self.file_updated.emit()
+
+                # close dialog
+                self.done(0)
+            else:
+                QMessageBox.critical(self, "Input Error",
+                    'You already have another staff with identical NRIC.\n' +
+                    'Please check that your entries are correct.',
+                    QMessageBox.Ok)
+        else:
+            QMessageBox.critical(self, "Input Error",
+                    "Please enter all details.",
+                    QMessageBox.Ok)
+            
+    def is_ready_for_saving(self):
+        # name filled
         if self.edit_full_name.hasAcceptableInput():
             if self.edit_biometric_name.hasAcceptableInput():
                 if self.edit_nric.hasAcceptableInput():
-                    # check if duplicate entry (nric is unique)
-                    if self.edit_nric.text() not in Employee.employees:
-                        # add employee to existing dictionary of employees
-                        Employee.employees[self.edit_nric.text()] = (self.edit_full_name.text().upper(), self.edit_biometric_name.text())
-
-                        # save employee to file-based db
-                        with open('employees.txt', 'a', encoding='utf-8') as f:
-                            f.write('{};{};{}\n'.format(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), self.edit_nric.text()))
-                        
-                        # emit signal
-                        self.file_updated.emit()
-
-                        # close dialog
-                        self.done(0)
-                    else:
-                        QMessageBox.critical(self, "Input Error",
-                               'You already have another staff with identical NRIC.\n' +
-                               'Please check that your entries are correct.',
-                               QMessageBox.Ok)
-                else:
-                    QMessageBox.critical(self, "Input Error",
-                               "Please fill in the NRIC in the correct format.\n" +
-                               "XXXXXX-XX-XXXX",
-                               QMessageBox.Ok)
-            else:
-                QMessageBox.critical(self, "Input Error",
-                               "Please fill in the biometric name.",
-                               QMessageBox.Ok)
-        else:
-            QMessageBox.critical(self, "Input Error",
-                               "Please fill in the full name.",
-                               QMessageBox.Ok)
-        
+                    # check if shift button clicked
+                    if self.checkbox_shift1.isChecked() or self.checkbox_shift2.isChecked():
+                        if self.edit_base_pay.hasAcceptableInput():
+                            if self.edit_charge_early_dep.hasAcceptableInput():
+                                if self.edit_charge_late_arr.hasAcceptableInput():
+                                    if self.edit_charge_overtime.hasAcceptableInput():
+                                        return True
+        return False
+ 
     # slot for cancel btn
     @Slot()
     def btn_cancel_clicked(self):
         # close dialog
         self.done(0)
+
+    @Slot()
+    def base_pay_changed(self, text):
+        # calculate other payment info
+        self.edit_epf_employee.setText(str(round(Company.get_epf_employee() * float(text), 2)))
+        self.edit_epf_employer.setText(str(round(Company.get_epf_employer() * float(text), 2)))

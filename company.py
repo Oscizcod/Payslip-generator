@@ -3,8 +3,9 @@ class Company():
     epf_employer = 0.03
     epf_employee = 0.03   
     shifts = {'Shift 1':('08.00', '17.00', ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri']),
-              'Shift 2':('08.00', '13.00', ['Sat']),
-              'Shift 3':('08.00', '13.00', ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri'])}
+              'Shift 2':('08.00', '13.00', ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri']),
+              'Shift 3':('08.00', '13.00', ['Sat'])
+              }
     closed = ['Sun', 'Tue', 'Wed']
     dict_days = {'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thurs': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'}
 
