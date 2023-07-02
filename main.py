@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QCloseEvent
 import sys
 from main_window import MainWindow
 from employee import Employee
