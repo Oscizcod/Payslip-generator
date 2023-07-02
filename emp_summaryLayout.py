@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QButtonGroup, QRadioButton
 from PySide6.QtCore import Slot, Signal
 import os.path
 import os
@@ -17,25 +17,47 @@ class EmpSummaryLayout(QWidget):
         # label if no employees registered
         self.label_top = QLabel()
         btn_new_emp = QPushButton()
-        btn_new_emp.setText('Add new employee')
+        btn_new_emp.setText('New')
         btn_new_emp.clicked.connect(self.btn_new_emp_clicked)
+        # edit btn to edit existing employees details
+        btn_edit_emp = QPushButton()
+        btn_edit_emp.setText('Edit')
+        # set to disabled by default
+        btn_edit_emp.setEnabled(False)
+        btn_edit_emp.clicked.connect(self.btn_edit_emp_clicked)
         
         # check if employees.txt exists or if empty
         if len(Employee.get_employees()) != 0:
+            # title of layout
             self.label_top.setText('Employee summary: ')
             layout_top_level.addWidget(self.label_top)
 
-            for emp in Employee.get_employees().values():
+            # create group for radio buttons
+            group_btns_emps = QButtonGroup(self)
+            group_btns_emps.setExclusive(True)
+
+            for id, emp in Employee.get_employees().items():
+                # radio button - add to group
+                btn_radio_emp = QRadioButton()
+                group_btns_emps.addButton(btn_radio_emp, int(id))
+                # label
                 label_emp = QLabel()
                 label_emp.setText(emp.__str__())
+                # add label and btn to layout
+                layout_emp = QHBoxLayout()
+                layout_emp.addWidget(btn_radio_emp)
+                layout_emp.addWidget(label_emp)
                 # append to top layout
-                layout_top_level.addWidget(label_emp)
+                layout_top_level.addLayout(layout_emp)
         else:
             self.label_top.setText('No employees registered.')
             layout_top_level.addWidget(self.label_top)
 
-
-        layout_top_level.addWidget(btn_new_emp)
+        # horizontal layout for buttons
+        layout_btns = QHBoxLayout()
+        layout_btns.addWidget(btn_new_emp)
+        layout_btns.addWidget(btn_edit_emp)
+        layout_top_level.addLayout(layout_btns)
         self.setLayout(layout_top_level)
 
         # initialise emp_newLayout
@@ -46,6 +68,10 @@ class EmpSummaryLayout(QWidget):
     @Slot()
     def btn_new_emp_clicked(self):
         self.dialog_new_emp.exec()
+
+    @Slot()
+    def btn_edit_emp_clicked(self):
+        pass
 
     @Slot()
     def update_layout(self):

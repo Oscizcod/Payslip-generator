@@ -1,14 +1,17 @@
 import os.path
 import os
+import random
 
 class Employee():
     employees = {}
+    id_employees = []
     URL_emps = 'employees.txt'
 
-    def __init__(self, full_name, biometric_name, nric, shifts='13',
+    def __init__(self, id, full_name, biometric_name, nric, shifts='13',
                  base_pay=0, charge_ot=0, charge_late=0,
                  charge_early=0):
         # instantiate all instance vars
+        self.id = id
         self.full_name = full_name.upper()
         self.biometric_name = biometric_name
         self.nric = nric 
@@ -18,8 +21,23 @@ class Employee():
         self.charge_late = charge_late
         self.charge_early = charge_early
 
+    def get_shifts(self):
+        return self.shifts
+
+    def get_charge_ot(self):
+        return self.charge_ot
+
+    def get_charge_late(self):
+        return self.charge_late
+
+    def get_charge_early(self):
+        return self.charge_early
+    
+    def get_biometric_name(self):
+        return self.biometric_name
+
     def output_to_fileDB(self):
-        return '{};{};{};{};{};{};{};{}\n'.format(self.full_name, self.biometric_name, self.nric,
+        return '{};{};{};{};{};{};{};{};{}\n'.format(self.id,self.full_name, self.biometric_name, self.nric,
                                                 self.shifts, self.base_pay, self.charge_ot, self.charge_late,
                                                 self.charge_early)
     
@@ -30,12 +48,16 @@ class Employee():
                 for emp in emps:
                     emp_details = emp.split(';')
 
-                    # use nric as key
-                    # store (full name, biom name) as 2-tuple
-                    cls.employees[emp_details[2].strip()] = Employee(emp_details[0], emp_details[1],
+                    # use id as key
+                    # store Employee instance as value
+                    cls.employees[emp_details[0]] = Employee(emp_details[0], emp_details[1],
                                                                      emp_details[2], emp_details[3],
                                                                      emp_details[4], emp_details[5],
-                                                                     emp_details[6], emp_details[7].strip())
+                                                                     emp_details[6], emp_details[7],
+                                                                     emp_details[8].strip())
+                    
+                    # populate list of employee ids
+                    cls.id_employees.append(emp_details[0])
         else:
             pass
 
@@ -50,4 +72,19 @@ class Employee():
         return cls.employees
         
     def __str__(self):
-        return 'Employee: {}\n'.format(self.full_name) + 'NRIC: {}\n'.format(self.nric) + 'Biometric name: {}'.format(self.biometric_name) 
+        return 'Employee: {}\n'.format(self.full_name) + 'NRIC: {}\n'.format(self.nric) + 'Biometric name: {}'.format(self.biometric_name)
+
+    def get_id(self):
+        return self.id
+
+    @classmethod
+    def generate_emp_id(cls):
+        # generate a unique id for each employee
+        while True:
+            # generate random id
+            id_emp = random.randint(1,99)
+
+            if id_emp in cls.id_employees:
+                continue
+            # if unique, return id
+            return id_emp 

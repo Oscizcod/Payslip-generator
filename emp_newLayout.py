@@ -184,7 +184,8 @@ class EmpNewLayout(QDialog):
 
     @Slot()
     def btn_ok_clicked(self):
-        # initialise Payslip instance
+        self.btn_save_clicked()
+        
         pass
 
     # slot for save btn
@@ -204,7 +205,7 @@ class EmpNewLayout(QDialog):
                     shifts += '3'
 
                 # add employee to existing dictionary of employees
-                Employee.get_employees()[self.edit_nric.text()] = Employee(self.edit_full_name.text().upper(), self.edit_biometric_name.text(), 
+                Employee.get_employees()[Employee.generate_emp_id()] = Employee(Employee.generate_emp_id(), self.edit_full_name.text().upper(), self.edit_biometric_name.text(), 
                                                                            self.edit_nric.text(), shifts, self.edit_base_pay.text(), 
                                                                            self.edit_charge_overtime.text(), self.edit_charge_late_arr.text(),
                                                                            self.edit_charge_early_dep.text())
