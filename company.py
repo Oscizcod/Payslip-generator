@@ -2,9 +2,9 @@ class Company():
     name = 'KLINIK MURU SDN BHD'
     epf_employer = 0.03
     epf_employee = 0.03   
-    shifts = {'Shift 1':('08.00', '17.00', ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri']),
-              'Shift 2':('08.00', '13.00', ['Mon', 'Tue', 'Wed', 'Thurs', 'Fri']),
-              'Shift 3':('08.00', '13.00', ['Sat'])
+    shifts = {'1':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):['08.00', '17.00']},
+              '2':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):['08.00', '13.00']},
+              '3':{('Sat',):['08.00', '13.00']}
               }
     closed = ['Sun', 'Tue', 'Wed']
     dict_days = {'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thurs': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'}

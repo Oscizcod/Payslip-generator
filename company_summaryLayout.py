@@ -48,26 +48,28 @@ class CoSummLayout(QWidget):
       
         # set the display for the shifts
         for shift, details in Company.get_shifts().items():
-            if int(details[0][:2]) < 12:
-                time_start = details[0] + ' AM'
-            else:
-                time_start = details[0] + ' PM'
+            for time in details.values():
+                if int(time[0][:2]) < 12:
+                    time_start = time[0] + ' AM'
+                else:
+                    time_start = time[0] + ' PM'
 
-            if int(details[1][:2]) < 12:
-                time_end = details[1] + ' AM'
-            else:
-                time_end = details[1] + ' PM'
+                if int(time[1][:2]) < 12:
+                    time_end = time[1] + ' AM'
+                else:
+                    time_end = time[1] + ' PM'
 
             # get days spelt full
             str_full_days = ''
-            for abbr_day in details[2]:
-                full_day = Company.get_dict_days()[abbr_day]
-                str_full_days += full_day + ', '
+            for days in details:
+                for abbr_day in days:
+                    full_day = Company.get_dict_days()[abbr_day]
+                    str_full_days += full_day + ', '
             # remove right trailing comma
             str_full_days = str_full_days.rstrip(', ')
             # create label of shifts
             label_shifts = QLabel()
-            label_shifts.setText(shift + ': ' + time_start + ' to ' + time_end + ' on\n' + str_full_days)
+            label_shifts.setText('Shift ' + shift + ': ' + time_start + ' to ' + time_end + ' on\n' + str_full_days)
             layout_shifts.addWidget(label_shifts)
 
         return layout_shifts
