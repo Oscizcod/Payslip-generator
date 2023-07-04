@@ -47,13 +47,67 @@ class Payslip():
     
     def generate_records(self):
         url_xls = self.xml_to_xls()
-        clean_df = self.clean_data(url_xls)
-        self.write_payslip(clean_df)  # generate payslip
+        clean_df = self.clean_data(url_xls)  # generate clean data as log csv file
+        self.write_payslip()  # generate payslip
         self.write_attendance(clean_df)  # generate attendance
 
-    def write_payslip(self, df):
+    def write_attendance(self, df):
+        with open('./new-attendance/{}_attendance_{}_{}.txt'.format(self.biometric_name, self.month_df, self.year_df), 'w', encoding='utf-8') as f:
+            # total width of a line
+            total_width = 70
+        
+            # file header
+            f.write('KLINIK MURU SDN BHD\n')
+            f.write('36B, JALAN KOLAM AIR, 80100, JOHOR BAHRU\n')
+            f.write('ATTENDANCE FOR THE MONTH OF {} {}\n\n'.format(self.month_df.upper(), self.year_df))
+
+            # personal details and shifts
+            f.write('Name: {}'.format(self.full_name))
+            f.write('\n')
+            f.write('NRIC: {}'.format(self.nric))
+            f.write('\n')
+            # create shifts string
+            emp_shifts = ''
+            for shift in self.shifts:
+                for days, times in Company.get_shifts()[shift].items():
+                    emp_shifts += str(times[0]) + '-' + str(times[1]) + '\n['
+                    
+                    for day in days:
+                        emp_shifts += Company.get_dict_days()[day] + ','
+                    emp_shifts = emp_shifts.rstrip(',')
+                    emp_shifts += ']\n\n'
+                    
+            f.write('Shifts: ')
+            f.write('\n')
+            f.write(emp_shifts)
+            f.write('-' * total_width)
+            f.write('\n\n')
+
+            # column names
+            f.write('Day' + ' '*15 + 'Date' + ' '*26 + 'Time in' + ' '*21 + 'Time out')
+            f.write('\n')
+
+            # loop through clean df and write to file
+            for i, row in df.iterrows():
+                # re-write date in dd/mm/yyyy format
+                date = row[0]
+                day = row[1]
+                new_date = date[-2:] + '.' + date[0:2] + '.' + str(self.year_df)
+
+                if day == 'Thurs':
+                    day = day[:3]
+                
+                if row[2] == '-':
+                    f.write(day + ' '*15 + new_date + ' '*24 + row[2] + ' '*26 + row[3])
+                    f.write('\n')
+                else:
+                    # write data into file
+                    f.write(day + ' '*15 + new_date + ' '*20 + row[2] + ' '*20 + row[3])
+                    f.write('\n')
+
+    def write_payslip(self):
         with open('./payslip/{}_payslip_{}_{}.txt'.format(self.biometric_name, self.month_df, self.year_df), 'w', encoding='utf-8') as f:
-             # total width of a line
+            # total width of a line
             total_width = 70
         
             # file header
@@ -398,7 +452,7 @@ class Payslip():
 
         # write to file
         df_emp.to_csv('./log/{}_attendance_log.csv'.format(self.biometric_name), index=False) 
-        
+
         return df_emp
    
     def get_working_hours(self):
@@ -480,8 +534,8 @@ class Payslip():
 if __name__ == '__main__':
     from employee import Employee
 
-    emp = Employee(23, 'Fatin Nurimah','Fatin','950323-34-3433',
+    emp = Employee(23, 'Fatin Nurimah','Nurin','950323-34-3433',
                    '13',1000,1,1,1)
     
-    url = 'E:/RE001_06.XLS'
-    Payslip(url, emp)
+    url = 'old-attendance/RE001_06.XLS'
+    Payslip(url, emp, 0, 0, 0, 'NIL')
