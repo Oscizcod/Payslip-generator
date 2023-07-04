@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QStackedLayout
 from PySide6.QtCore import Slot
 from emp_summaryLayout import EmpSummaryLayout
+from emp_newLayout import EmpNewLayout
+from emp_delLayout import EmpDelLayout
 from company_summaryLayout import CoSummLayout
 from employee import Employee
 
@@ -13,10 +15,16 @@ class MainWindow(QMainWindow):
 
         # initialise UI
         self.initUI()
-        
-        # connect signals to slots
+
+        # connect signals to slots    
+        # connect signal from new employee layout when saved    
+        self.layout_newEmp.emp_updated.connect(self.empUI)
+        # connect signal from new employee layout when saved
+        self.layout_delEmp.emp_updated.connect(self.empUI)
         self.action_file_home.triggered.connect(lambda: self.change_layout(0))
         self.action_emp_summary.triggered.connect(lambda: self.change_layout(1))
+        self.action_emp_new.triggered.connect(lambda: self.change_layout(2))
+        self.action_emp_delete.triggered.connect(lambda: self.change_layout(3))
         self.action_file_quit.triggered.connect(self.action_file_quit_clicked)
 
     @Slot()
@@ -55,8 +63,14 @@ class MainWindow(QMainWindow):
         # add home page layout to stack - index 0
         self.layout_home = CoSummLayout()
         self.layout_stacked.addWidget(self.layout_home)
-        # # add new employment layout to stack - index 1
+        # add employment summary layout to stack - index 1
         self.empUI()
+        # add new employment layout to stack - index 2
+        self.layout_newEmp = EmpNewLayout()
+        self.layout_stacked.addWidget(self.layout_newEmp)
+        # add delete employee layout to stack - index 3
+        self.layout_delEmp = EmpDelLayout()
+        self.layout_stacked.addWidget(self.layout_delEmp)
 
         # set central widget and add stacked layout
         widget_central = QWidget()
@@ -72,6 +86,8 @@ class MainWindow(QMainWindow):
         self.action_file_quit = file_menu.addAction('Quit')
         emp_menu = main_menu.addMenu('Employees')
         self.action_emp_summary = emp_menu.addAction('Summary')
+        self.action_emp_new = emp_menu.addAction('New')
+        self.action_emp_delete = emp_menu.addAction('Delete')
 
     # define close event
     # save changes to employees.txt before closing app
