@@ -7,7 +7,7 @@ from company import Company
 
 class EmpNewLayout(QDialog):
     # create custom signal
-    file_updated = Signal()
+    emp_updated = Signal()
 
     def __init__(self, widget):
         super().__init__(widget)
@@ -16,11 +16,8 @@ class EmpNewLayout(QDialog):
         self.initUI()
 
         # connect btn signals to slots
-        self.btn_browse_attn_file.clicked.connect(self.btn_browse_attn_file_clicked)
-        self.btn_gen_payment_invoice.clicked.connect(self.btn_ok_clicked)
         self.btn_save_emp_details.clicked.connect(self.btn_save_clicked)
         self.btn_cancel.clicked.connect(self.btn_cancel_clicked)
-
         self.edit_base_pay.textEdited.connect(self.base_pay_changed)
 
     def initUI(self):
@@ -28,8 +25,6 @@ class EmpNewLayout(QDialog):
         self.setWindowTitle('Add new employee')
 
         # inputs
-        self.btn_gen_payment_invoice = QPushButton()
-        self.btn_gen_payment_invoice.setText('OK')
         self.btn_save_emp_details = QPushButton()
         self.btn_save_emp_details.setText('Save')
         self.btn_cancel = QPushButton()
@@ -39,7 +34,6 @@ class EmpNewLayout(QDialog):
         # horizontal layout for both btns
         layout_btns = QHBoxLayout()
         layout_btns.addWidget(self.btn_save_emp_details)
-        layout_btns.addWidget(self.btn_gen_payment_invoice)
         layout_btns.addWidget(self.btn_cancel)
         layout_top_main = QVBoxLayout()
         label_instruction = QLabel()
@@ -48,7 +42,6 @@ class EmpNewLayout(QDialog):
         layout_top_main.addWidget(self.bioUI())
         layout_top_main.addWidget(self.workingUI())
         layout_top_main.addWidget(self.paymentUI())
-        layout_top_main.addWidget(self.attnFileUI())
         layout_top_main.addLayout(layout_btns)
         self.setLayout(layout_top_main)
 
@@ -78,35 +71,35 @@ class EmpNewLayout(QDialog):
         frame_bio.setLayout(form_emp_new)
 
         return frame_bio
-    
-    def attnFileUI(self):
-        # all components for upload attendance file
-        self.input_attn_url = QLineEdit()  # accept file path url
-        self.btn_browse_attn_file = QPushButton()
-        self.btn_browse_attn_file.setText('Browse')
-        
-        # layout
-        frame_upload = QGroupBox('Attendance file upload')
-        layout_attn_upload = QHBoxLayout()
-        layout_attn_upload.addWidget(self.input_attn_url)
-        layout_attn_upload.addWidget(self.btn_browse_attn_file)
-        frame_upload.setLayout(layout_attn_upload)
-
-        return frame_upload
 
     def paymentUI(self):
         # define all inputs
+        # validator for all charges
         validate_charges = QDoubleValidator()
         validate_charges.setRange(0, 9999, 2)
+        # base pay 
         self.edit_base_pay = QLineEdit()
         self.edit_base_pay.setValidator(validate_charges)
         self.edit_base_pay.setText('0')
+        # epf
         self.edit_epf_employer = QLineEdit()
         self.edit_epf_employer.setReadOnly(True)
         self.edit_epf_employee = QLineEdit()
         self.edit_epf_employee.setReadOnly(True)
+        # eis
+        self.edit_eis_employer = QLineEdit()
+        self.edit_eis_employer.setReadOnly(True)
+        self.edit_eis_employee = QLineEdit()
+        self.edit_eis_employee.setReadOnly(True)
+        # socso
+        self.edit_socso_employer = QLineEdit()
+        self.edit_socso_employer.setReadOnly(True)
+        self.edit_socso_employee = QLineEdit()
+        self.edit_socso_employee.setReadOnly(True)
+        # ot
         self.edit_charge_overtime = QLineEdit()
         self.edit_charge_overtime.setValidator(validate_charges)
+        # deductions - late arrival/ early dep
         self.edit_charge_late_arr = QLineEdit()
         self.edit_charge_late_arr.setValidator(validate_charges)
         self.edit_charge_early_dep = QLineEdit()
@@ -115,9 +108,18 @@ class EmpNewLayout(QDialog):
         # create layout
         # use form for all inputs
         layout_payment = QFormLayout()
+        # base pay
         layout_payment.addRow('Base pay: RM', self.edit_base_pay)
+        # epf
         layout_payment.addRow('EPF Employer contribution: RM', self.edit_epf_employer)
         layout_payment.addRow('EPF Employee contribution: RM', self.edit_epf_employee)
+        # eis
+        layout_payment.addRow('EIS Employer contribution: RM', self.edit_eis_employer)
+        layout_payment.addRow('EIS Employee contribution: RM', self.edit_eis_employee)
+        # socso
+        layout_payment.addRow('Socso Employer contribution: RM', self.edit_socso_employer)
+        layout_payment.addRow('Socso Employee contribution: RM', self.edit_socso_employee)
+        # ot / deductions
         layout_payment.addRow('Overtime charges: RM', self.edit_charge_overtime)
         layout_payment.addRow('Late arrival charges: RM', self.edit_charge_late_arr)
         layout_payment.addRow('Early departure charges: RM', self.edit_charge_early_dep)
@@ -172,21 +174,6 @@ class EmpNewLayout(QDialog):
         frame_working.setLayout(layout_top_working)
 
         return frame_working
-    
-    @Slot()
-    def btn_browse_attn_file_clicked(self):
-        file_dialog = QFileDialog()
-        file_url = QFileDialog.getOpenFileName(file_dialog,"Open Attendance Sheet", "C:/", "Excel Files (*.xls *.xlsm *.xlsx *.xlsb *xlam)")
-
-        # set input field to selected file
-        self.input_attn_url.setText(file_url[0])
-
-
-    @Slot()
-    def btn_ok_clicked(self):
-        self.btn_save_clicked()
-        
-        pass
 
     # slot for save btn
     @Slot()
@@ -206,12 +193,12 @@ class EmpNewLayout(QDialog):
 
                 # add employee to existing dictionary of employees
                 Employee.get_employees()[Employee.generate_emp_id()] = Employee(Employee.generate_emp_id(), self.edit_full_name.text().upper(), self.edit_biometric_name.text(), 
-                                                                           self.edit_nric.text(), shifts, self.edit_base_pay.text(), 
-                                                                           self.edit_charge_overtime.text(), self.edit_charge_late_arr.text(),
-                                                                           self.edit_charge_early_dep.text())
+                                                                           self.edit_nric.text(), shifts, float(self.edit_base_pay.text()), 
+                                                                           float(self.edit_charge_overtime.text()), float(self.edit_charge_late_arr.text()),
+                                                                           float(self.edit_charge_early_dep.text()))
                         
                 # emit signal
-                self.file_updated.emit()
+                self.emp_updated.emit()
 
                 # close dialog
                 self.done(0)
@@ -247,6 +234,12 @@ class EmpNewLayout(QDialog):
 
     @Slot()
     def base_pay_changed(self, text):
-        # calculate other payment info
+        # calculate epf
         self.edit_epf_employee.setText(str(round(Company.get_epf_employee() * float(text), 2)))
         self.edit_epf_employer.setText(str(round(Company.get_epf_employer() * float(text), 2)))
+        # calculate eis
+        self.edit_eis_employee.setText(str(round(Company.get_eis_employee() * float(text), 2)))
+        self.edit_eis_employer.setText(str(round(Company.get_eis_employer() * float(text), 2)))
+        # calculate socso
+        self.edit_socso_employee.setText(str(round(Company.get_socso_employee() * float(text), 2)))
+        self.edit_socso_employer.setText(str(round(Company.get_socso_employer() * float(text), 2)))

@@ -1,10 +1,16 @@
+from datetime import time
+
 class Company():
     name = 'KLINIK MURU SDN BHD'
-    epf_employer = 0.03
-    epf_employee = 0.03   
-    shifts = {'1':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):['08.00', '17.00']},
-              '2':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):['08.00', '13.00']},
-              '3':{('Sat',):['08.00', '13.00']}
+    epf_employer = 0.13
+    epf_employee = 0.11
+    eis_employer = 0.002
+    eis_employee = 0.002
+    socso_employer = 0.02
+    socso_employee = 0.005   
+    shifts = {'1':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):[time(8,0), time(17,0)]},
+              '2':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):[time(8,0), time(13,0)]},
+              '3':{('Sat',):[time(8,0), time(13,0)]}
               }
     closed = ['Sun', 'Tue', 'Wed']
     dict_days = {'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thurs': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'}
@@ -33,6 +39,38 @@ class Company():
     @classmethod
     def set_epf_employee(cls, employee=0):
         cls.epf_employee = employee
+
+    @classmethod
+    def get_eis_employee(cls):
+        return cls.eis_employee
+    
+    @classmethod
+    def set_eis_employee(cls, employee=0):
+        cls.eis_employee = employee
+
+    @classmethod
+    def get_eis_employer(cls):
+        return cls.eis_employer
+    
+    @classmethod
+    def set_eis_employer(cls, employer=0):
+        cls.eis_employer = employer
+
+    @classmethod
+    def get_socso_employee(cls):
+        return cls.socso_employee
+    
+    @classmethod
+    def set_socso_employee(cls, employee=0):
+        cls.socso_employee = employee
+
+    @classmethod
+    def get_socso_employer(cls):
+        return cls.socso_employer
+    
+    @classmethod
+    def set_socso_employer(cls, employer=0):
+        cls.socso_employer = employer
 
     @classmethod
     def get_shifts(cls):

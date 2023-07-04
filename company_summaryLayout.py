@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QGroupBox, QHBoxLayout, QPushButton
 from company import Company
+import datetime as dt
 
 class CoSummLayout(QWidget):
     def __init__(self):
@@ -10,12 +11,25 @@ class CoSummLayout(QWidget):
     
     def initUI(self):
         # labels and inputs
+        # name
         label_name = QLabel()
         label_name.setText(Company.get_name())
+        # epf
         label_epf_employer = QLabel()
         label_epf_employer.setText('Employer: ' + str(Company.get_epf_employer()*100) + '%')
         label_epf_employee = QLabel()
         label_epf_employee.setText('Employee: ' + str(Company.get_epf_employee()*100) + '%')
+        # eis
+        label_eis_employer = QLabel()
+        label_eis_employer.setText('Employer: ' + str(Company.get_eis_employer()*100) + '%')
+        label_eis_employee = QLabel()
+        label_eis_employee.setText('Employee: ' + str(Company.get_eis_employee()*100) + '%')
+        # socso
+        label_socso_employer = QLabel()
+        label_socso_employer.setText('Employer: ' + str(Company.get_socso_employer()*100) + '%')
+        label_socso_employee = QLabel()
+        label_socso_employee.setText('Employee: ' + str(Company.get_socso_employee()*100) + '%')
+        #shifts
         layout_shifts = self.shiftsUI()
         layout_closed = self.closedDaysUI()
 
@@ -33,6 +47,18 @@ class CoSummLayout(QWidget):
         frame_epf.layout().addWidget(label_epf_employer)
         frame_epf.layout().addWidget(label_epf_employee)
         self.layout().addWidget(frame_epf)
+         # eis
+        frame_eis = QGroupBox('Insurance')
+        frame_eis.setLayout(QVBoxLayout())
+        frame_eis.layout().addWidget(label_eis_employer)
+        frame_eis.layout().addWidget(label_eis_employee)
+        self.layout().addWidget(frame_eis)
+         # socso
+        frame_socso = QGroupBox('Insurance')
+        frame_socso.setLayout(QVBoxLayout())
+        frame_socso.layout().addWidget(label_socso_employer)
+        frame_socso.layout().addWidget(label_socso_employee)
+        self.layout().addWidget(frame_socso)
         # shifts
         frame_shifts = QGroupBox('Shifts')
         frame_shifts.setLayout(layout_shifts)
@@ -49,15 +75,8 @@ class CoSummLayout(QWidget):
         # set the display for the shifts
         for shift, details in Company.get_shifts().items():
             for time in details.values():
-                if int(time[0][:2]) < 12:
-                    time_start = time[0] + ' AM'
-                else:
-                    time_start = time[0] + ' PM'
-
-                if int(time[1][:2]) < 12:
-                    time_end = time[1] + ' AM'
-                else:
-                    time_end = time[1] + ' PM'
+                    time_start = str(time[0]) 
+                    time_end = str(time[1] )
 
             # get days spelt full
             str_full_days = ''

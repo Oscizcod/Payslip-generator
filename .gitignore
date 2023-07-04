@@ -3,3 +3,9 @@ __pycache__/
 employees.txt
 constants.py
 .ipynb_checkpoints
+
+# generated dirs for co docs
+payslip/*
+old-attendance/*
+new-attendance/*
+log/*

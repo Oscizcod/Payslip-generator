@@ -21,6 +21,15 @@ class Employee():
         self.charge_late = charge_late
         self.charge_early = charge_early
 
+    def get_id(self):
+        return self.id
+    
+    def get_full_name(self):
+        return self.full_name
+    
+    def get_nric(self):
+        return self.nric
+    
     def get_shifts(self):
         return self.shifts
 
@@ -35,6 +44,13 @@ class Employee():
     
     def get_biometric_name(self):
         return self.biometric_name
+    
+    def get_base_pay(self):
+        return self.base_pay
+    
+    @classmethod
+    def get_employees(cls):
+        return cls.employees
 
     def output_to_fileDB(self):
         return '{};{};{};{};{};{};{};{};{}\n'.format(self.id,self.full_name, self.biometric_name, self.nric,
@@ -52,9 +68,9 @@ class Employee():
                     # store Employee instance as value
                     cls.employees[emp_details[0]] = Employee(emp_details[0], emp_details[1],
                                                                      emp_details[2], emp_details[3],
-                                                                     emp_details[4], emp_details[5],
-                                                                     emp_details[6], emp_details[7],
-                                                                     emp_details[8].strip())
+                                                                     emp_details[4], float(emp_details[5]),
+                                                                     float(emp_details[6]), float(emp_details[7]),
+                                                                     float(emp_details[8].strip()))
                     
                     # populate list of employee ids
                     cls.id_employees.append(emp_details[0])
@@ -66,25 +82,18 @@ class Employee():
          with open('employees.txt', 'w', encoding='utf-8') as f:
             for employee in Employee.get_employees().values():
                 f.write(employee.output_to_fileDB())
-
-    @classmethod
-    def get_employees(cls):
-        return cls.employees
         
     def __str__(self):
         return 'Employee: {}\n'.format(self.full_name) + 'NRIC: {}\n'.format(self.nric) + 'Biometric name: {}'.format(self.biometric_name)
-
-    def get_id(self):
-        return self.id
 
     @classmethod
     def generate_emp_id(cls):
         # generate a unique id for each employee
         while True:
             # generate random id
-            id_emp = random.randint(1,99)
+            id_emp = random.randint(10,99)
 
             if id_emp in cls.id_employees:
                 continue
             # if unique, return id
-            return id_emp 
+            return str(id_emp)

@@ -5,12 +5,19 @@ import re
 import pandas as pd
 from company import Company
 import os
+import datetime as dt
 
 class Payslip():
+    dict_months = {'01': 'January', '02': 'February', '03': 'March', '04':'April', '05': 'May', '06': 'June',
+                   '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
+
     def __init__(self, url_attn_file, emp):
         self.url_attn_file = url_attn_file
         # get the employee instance varibles
+        self.full_name = emp.get_full_name()
+        self.nric = emp.get_nric()
         self.biometric_name = emp.get_biometric_name()
+        self.base_pay = emp.get_base_pay()
         self.shifts = emp.get_shifts()
         self.charge_ot = emp.get_charge_ot()
         self.charge_late = emp.get_charge_late()
@@ -18,25 +25,196 @@ class Payslip():
         # get employee's working hours
         self.working_hours = self.get_working_hours()
 
-        self.generate_payslip()
+        # get company payment details
+        # epf
+        self.epf_employee = Company.get_epf_employee()
+        self.epf_employer = Company.get_epf_employer()
+        # eis
+        self.eis_employee = Company.get_eis_employee()
+        self.eis_employer = Company.get_eis_employer()
+        # socso
+        self.socso_employee = Company.get_socso_employee()
+        self.socso_employer = Company.get_socso_employer()
+
+        self.generate_records()
     
-    def generate_payslip(self):
-        url_xls = self.xml_to_xls()
-        self.clean_data(url_xls)
+    def generate_records(self):
+        # url_xls = self.xml_to_xls()
+        # CHANGE BACK LATER! UNCOMMENT TOP AND CHANGE DELETE URL BOTTOM
+        url_xls = './old-attendance/RE001_06.XLS'
+        clean_df = self.clean_data(url_xls)
+        self.write_payslip(clean_df)  # generate payslip
+        self.write_attendance(clean_df)  # generate attendance
+
+    def write_payslip(self, df):
+        with open('./payslip/{}_payslip_{}_{}.txt'.format(self.biometric_name, self.month_df, self.year_df), 'w', encoding='utf-8') as f:
+             # total width of a line
+            total_width = 70
+        
+            # file header
+            f.write('KLINIK MURU SDN BHD\n')
+            f.write('36B, JALAN KOLAM AIR, 80100, JOHOR BAHRU\n')
+            f.write('SALARY SLIP FOR THE MONTH OF {} {}\n\n'.format(self.month_df.upper(), self.year_df))
+
+            # personal details and shifts
+            f.write('Name: {}'.format(self.full_name))
+            f.write('\n')
+            f.write('NRIC: {}'.format(self.nric))
+            f.write('\n')
+            # create shifts string
+            emp_shifts = ''
+            for shift in self.shifts:
+                for days, times in Company.get_shifts()[shift].items():
+                    emp_shifts += str(times[0]) + '-' + str(times[1]) + '\n['
+                    
+                    for day in days:
+                        emp_shifts += Company.get_dict_days()[day] + ','
+                    emp_shifts = emp_shifts.rstrip(',')
+                    emp_shifts += ']\n\n'
+                    
+            f.write('Shifts: ')
+            f.write('\n')
+            f.write(emp_shifts)
+            f.write('-' * total_width)
+            f.write('\n\n')
+
+            # earnings
+            f.write('Description')
+            f.write('Earnings'.rjust(total_width-len('Description')))
+            f.write('\n\n')
+            # base pay
+            f.write('Basic Pay')
+            f.write('RM {}'.format(self.base_pay).rjust(total_width-9))
+            f.write('\n')
+            # allowance
+            # CHANGE LATER!
+            allowance = 'Allowance: {}'.format('fill_later')
+            f.write(allowance)
+            allowance_rm = 0
+            f.write('RM {}'.format(allowance_rm).rjust(total_width-len(allowance)))
+            f.write('\n')
+            # overtime
+            ot = 'Overtime'
+            f.write(ot)
+            f.write('RM {}'.format(self.ot_rm).rjust(total_width-len(ot)))
+            f.write('\n')
+            f.write('-' * total_width)
+            f.write('\n\n')
+            
+            # deductions
+            f.write('Deductions'.rjust(total_width))
+            f.write('\n\n')
+            # epf
+            epf_empe = 'Employee EPF'
+            f.write(epf_empe)
+            epf_employee_rm = round(self.epf_employee * self.base_pay, 2)
+            f.write('RM {}'.format(str(epf_employee_rm)).rjust(total_width-len(epf_empe)))
+            f.write('\n')
+            # eis
+            eis_empe = 'Employee EIS'
+            f.write(eis_empe)
+            eis_employee_rm = round(self.eis_employee * self.base_pay, 2)
+            f.write('RM {}'.format(str(eis_employee_rm)).rjust(total_width-len(eis_empe)))
+            f.write('\n')
+            # socso
+            socso_empe = 'Employee SOCSO'
+            f.write(socso_empe)
+            socso_employee_rm = round(self.socso_employee * self.base_pay, 2)
+            f.write('RM {}'.format(str(socso_employee_rm)).rjust(total_width-len(socso_empe)))
+            f.write('\n')
+            # late arrival / early departure
+            misc_deduct = 'Late arrival/ early departure'
+            f.write(misc_deduct)
+            f.write('RM {}'.format(self.misc_deduct_rm).rjust(total_width-len(misc_deduct)))
+            f.write('\n')
+            f.write('-' * total_width)
+            f.write('\n\n')
+
+            # nett salary
+            nett_salary = 'Nett salary'
+            f.write(nett_salary)
+            nett_rm = self.base_pay + allowance_rm + self.ot_rm - epf_employee_rm - eis_employee_rm - socso_employee_rm - self.misc_deduct_rm
+            f.write('RM {}'.format(str(nett_rm)).rjust(total_width-len(nett_salary)))
+            f.write('\n')
+            f.write('-' * total_width)
+            f.write('\n\n')
+
+            # employer contributions
+            # epf
+            f.write('Employer contribution'.rjust(total_width))
+            f.write('\n\n')
+            epf_empr = 'Employer EPF'
+            f.write(epf_empr)
+            epf_employer_rm = round(self.epf_employer * self.base_pay, 2)
+            f.write('RM {}'.format(str(epf_employer_rm)).rjust(total_width-len(epf_empr)))
+            f.write('\n')
+            # eis
+            eis_empr = 'Employer EIS'
+            f.write(eis_empr)
+            eis_employer_rm = round(self.eis_employer * self.base_pay, 2)
+            f.write('RM {}'.format(str(eis_employer_rm)).rjust(total_width-len(eis_empr)))
+            f.write('\n')
+            # socso
+            socso_empr = 'Employer SOCSO'
+            f.write(socso_empr)
+            socso_employer_rm = round(self.socso_employer * self.base_pay, 2)
+            f.write('RM {}'.format(str(socso_employer_rm)).rjust(total_width-len(socso_empr)))
+            f.write('\n')
+            f.write('-' * total_width)
+            f.write('\n\n')
+
+            # working days summary
+            # total
+            f.write('Working days summary'.rjust(total_width))
+            f.write('\n\n')
+            total_days = 'Total days in the month'
+            f.write(total_days)
+            f.write('{}'.format(self.days_df).rjust(total_width-len(total_days)))
+            f.write('\n')
+            # closed
+            closed_days = 'Closed'
+            f.write(closed_days)
+            f.write('{}'.format('fill_later').rjust(total_width-len(closed_days)))
+            f.write('\n')
+            # public hols
+            public_holidays = 'Public holidays'
+            f.write(public_holidays)
+            f.write('{}'.format('fill_later').rjust(total_width-len(public_holidays)))
+            f.write('\n')
+            # annual leave
+            annual_leave = 'Annual leave'
+            f.write(annual_leave)
+            f.write('{}'.format('fill_later').rjust(total_width-len(annual_leave)))
+            f.write('\n')
+            # medical leave
+            med_leave = 'Medical leave'
+            f.write(med_leave)
+            f.write('{}'.format('fill_later').rjust(total_width-len(med_leave)))
+            f.write('\n')
+            # days worked
+            worked_days = 'Total days worked'
+            f.write(worked_days)
+            f.write('{}'.format('fill_later').rjust(total_width-len(worked_days)))
 
     def xml_to_xls(self):
         # extract file name
         regex_file = r'.*(RE\d+_\d+.XLS)$'
         file_name = re.search(regex_file, self.url_attn_file).groups()[0]
         
-        # create attendance dir if not present
-        if not os.path.exists('./attendance/'):
-            os.mkdir('./attendance/')
+        # create all dirs
+        if not os.path.exists('./old-attendance/'):
+            os.mkdir('./old-attendance/')
+        if not os.path.exists('./payslip/'):
+            os.mkdir('./payslip/')
+        if not os.path.exists('./new-attendance/'):
+            os.mkdir('./new-attendance/')
+        if not os.path.exists('./log/'):
+            os.mkdir('./log/')
 
         # copy file to attendance/ dir
-        shutil.copy2(self.url_attn_file, './attendance/' + file_name)
-        input_file = './attendance/' + file_name
-        output_file = './attendance/' + file_name
+        shutil.copy2(self.url_attn_file, './old-attendance/' + file_name)
+        input_file = './old-attendance/' + file_name
+        output_file = './old-attendance/' + file_name
 
         # instantiate file converter
         client = ConversionClient(API_KEY)
@@ -51,6 +229,14 @@ class Payslip():
     def clean_data(self, url_file):
         # create df of attendance file
         df = pd.read_excel(url_file, header=None)
+
+        # extract date
+        date_df = df.iloc[3,12]
+        regex_dates = r'\d{2}'
+        dates_df = re.findall(regex_dates, date_df)
+        self.year_df = '20' + dates_df[0]
+        self.month_df = self.get_dict_months()[dates_df[1]]
+        self.days_df = dates_df[-1]
 
         # determine number of staff
         num_rows = df.shape[0]
@@ -78,7 +264,9 @@ class Payslip():
                     # collect all timings
                     for k in range(2,8):
                         try:
-                            time = float(row[k].replace(':','.'))
+                            # convert timings into time objs
+                            time_str = row[k].split(':')
+                            time = dt.time(int(time_str[0]), int(time_str[1]))
                         except ValueError:
                             continue
                     
@@ -91,25 +279,25 @@ class Payslip():
                     # decide which start time to use depending on day
                     for days, time in self.working_hours.items():
                         if row[1] in days:
-                            start_time = float(time[0])
-                            end_time = float(time[1])
-
+                            start_time = time[0]
+                            end_time = time[1]
+                    
                     # if no timing, set time_in and time_out to 0
                     if len(timings) == 0:
-                        time_in.append(0)
-                        time_out.append(0)
+                        time_in.append('-')
+                        time_out.append('-')
                     # if single time value, use 12 PM as demarcation if time in/out
                     elif len(timings) == 1:
-                        if timings[0] > 12:
-                            time_out.append(timings[0])
-                            time_in.append(start_time)
+                        if timings[0] > dt.time(12,0):
+                            time_out.append(str(timings[0]))
+                            time_in.append(str(start_time))
                         else:
-                            time_in.append(timings[0])
-                            time_out.append(end_time)
+                            time_in.append(str(timings[0]))
+                            time_out.append(str(end_time))
                     # for all other lengths, find min/max
                     else:
-                        time_in.append(min(timings))
-                        time_out.append(max(timings))
+                        time_in.append(str(min(timings)))
+                        time_out.append(str(max(timings)))
               
                 # iterate through latter half of month
                 for l, row in df.iloc[25*(i-1) + 8:25*i -1].iterrows():
@@ -125,7 +313,9 @@ class Payslip():
                     # collect all timings
                     for m in range(10,16):
                         try:
-                            time = float(row[m].replace(':','.'))
+                            # convert timings into time objs
+                            time_str = row[m].split(':')
+                            time = dt.time(int(time_str[0]), int(time_str[1]))
                         except ValueError:
                             continue
             
@@ -134,29 +324,29 @@ class Payslip():
                             timings.append(time)
                         else:
                             continue
-                    
+
                     # decide which start time to use depending on day
                     for days, time in self.working_hours.items():
-                        if row[1] in days:
-                            start_time = float(time[0])
-                            end_time = float(time[1])
-
+                        if row[9] in days:
+                            start_time = time[0]
+                            end_time = time[1]
+                            
                     # if no timing, set time_in and time_out to 0
                     if len(timings) == 0:
-                        time_in.append(0)
-                        time_out.append(0)
+                        time_in.append('-')
+                        time_out.append('-')
                     # if single time value, use 12 PM as demarcation if time in/out
                     elif len(timings) == 1:
-                        if timings[0] > 12:
-                            time_out.append(timings[0])
-                            time_in.append(start_time)
+                        if timings[0] > dt.time(12,0):
+                            time_out.append(str(timings[0]))
+                            time_in.append(str(start_time))
                         else:
-                            time_in.append(timings[0])
-                            time_out.append(end_time)
+                            time_in.append(str(timings[0]))
+                            time_out.append(str(end_time))
                      # for all other lengths, find min/max
                     else:
-                        time_in.append(min(timings))
-                        time_out.append(max(timings))
+                        time_in.append(str(min(timings)))
+                        time_out.append(str(max(timings)))
                 
                 break
             else:
@@ -166,82 +356,84 @@ class Payslip():
         data = {'date': date, 'day': day, 'time_in': time_in, 'time_out': time_out}
         df_emp = pd.DataFrame(data)
         df_emp['late_arr_mins'] = df_emp.apply(self.calculate_late_arr_mins, axis=1)
-        df_emp['leaving_time'] = df_emp.apply(self.calculate_leaving_time, axis=1)
-        df_emp['overtime_mins'] = df_emp.leaving_time.apply(lambda x: x if x>0 else 0)
-        df_emp['early_dep_mins'] = df_emp.leaving_time.apply(lambda x: x if x<0 else 0)
-        df_emp.drop('leaving_time', axis=1, inplace=True)
-        df_emp['overtime_mins'] = df_emp.overtime_mins.apply(self.calculate_overtime_mins)
-        df_emp['early_dep_mins'] = df_emp.early_dep_mins.apply(self.calculate_early_dep_mins)
+        df_emp['overtime_mins'] = df_emp.apply(self.calculate_overtime_mins,axis=1)
+        df_emp['early_dep_mins'] = df_emp.apply(self.calculate_early_dep_mins,axis=1)
         df_emp['deduct_late_arr'] = df_emp.late_arr_mins.apply(self.deduct_late_arr)
         df_emp['deduct_early_dep'] = df_emp.early_dep_mins.apply(self.deduct_early_dep)
         df_emp['pay_overtime'] = df_emp.overtime_mins.apply(self.pay_overtime)
+
+        # calculate mins and charges
+        self.ot_mins = df_emp.overtime_mins.sum()
+        self.misc_deduct_mins = df_emp.late_arr_mins.sum() + df_emp.early_dep_mins.sum()
+        self.ot_rm = df_emp.pay_overtime.sum()
+        self.misc_deduct_rm = df_emp.deduct_late_arr.sum() + df_emp.deduct_early_dep.sum()
+
+        # write to file
+        df_emp.to_csv('./log/{}_attendance_log.csv'.format(self.biometric_name), index=False) 
         
-        df_emp.to_csv('{}_payslip.csv'.format(self.biometric_name), index=False) 
         return df_emp
    
     def get_working_hours(self):
         working_hours = {}
 
         for shift in self.shifts:
+            # get dictionary of working days to timings
             working_hours.update(Company.get_shifts()[shift])
 
         return working_hours
     
     def calculate_late_arr_mins(self, df):
-        if df.day in Company.get_closed():
+        if df.time_in == '-':
             return 0    
-        
-        # decide which start time to use depending on day
-        for days, time in self.working_hours.items():
-            if df.day in days:
-                start_time = float(time[0])
-
-        # check if early
-        if df.time_in < start_time:
-            return 0
-        late_arr_time = df.time_in - start_time        
-        
-        # calculate number of mins late arrival
-        if int(late_arr_time) == 0:
-            return round(late_arr_time * 100)
         else:
-            late_arr_hr_to_mins = int(late_arr_time) * 60
-            late_arr_mins = round((late_arr_time / int(late_arr_time)) * 100)
-            return late_arr_hr_to_mins + late_arr_mins            
+            # decide which start time to use depending on day
+            for days, time in self.working_hours.items():
+                if df.day in days:
+                    start_time = time[0]
 
-    def calculate_leaving_time(self, df):
-        if df.day in Company.get_closed():
-            return 0
+            # check if early
+            if dt.datetime.strptime(df.time_in, '%H:%M:%S').time() < start_time:
+                return 0
+            
+            late_arr_secs = dt.timedelta(hours=dt.datetime.strptime(df.time_in,'%H:%M:%S').time().hour,
+                                         minutes=dt.datetime.strptime(df.time_in,'%H:%M:%S').time().minute) - dt.timedelta(hours=start_time.hour,
+                                                                                                                  minutes=start_time.minute)
+            return round(late_arr_secs.seconds / 60)
         
-        for days, time in self.working_hours.items():
-            if df.day in days:
-                end_time = float(time[1])
-
-        if round(df.time_in * 100) == 0 and round(df.time_out * 100) == 0:
-            # absent for work (neither early dep nor overtime)
-            return 0
+    def calculate_overtime_mins(self,df):
+        if df.time_in == '-':
+            return 0    
         else:
-            return df.time_out - end_time
+            # decide which start time to use depending on day
+            for days, time in self.working_hours.items():
+                if df.day in days:
+                    end_time = time[1]
+
+            # check if overtime
+            if dt.datetime.strptime(df.time_out, '%H:%M:%S').time() < end_time:
+                return 0
+            
+            ot_secs = dt.timedelta(hours=dt.datetime.strptime(df.time_out,'%H:%M:%S').time().hour,
+                                         minutes=dt.datetime.strptime(df.time_out,'%H:%M:%S').time().minute) - dt.timedelta(hours=end_time.hour,
+                                                                                                                  minutes=end_time.minute)
+            return round(ot_secs.seconds / 60)
         
-    def calculate_overtime_mins(self,time):
-        if int(time) == 0:
-            return round(time * 100)
+    def calculate_early_dep_mins(self,df):
+        if df.time_in == '-':
+            return 0   
+        else:
+            # decide which start time to use depending on day
+            for days, time in self.working_hours.items():
+                if df.day in days:
+                    end_time = time[1]
 
-        hrs_to_mins = int(time) * 60
-        mins = round(time % int(time) * 100)
-    
-        return hrs_to_mins + mins
-
-    def calculate_early_dep_mins(self,time):
-        time *= -1
-    
-        if int(time) == 0:
-            return round(time * 100)
-    
-        hrs_to_mins = int(time) * 60
-        mins = round(time % int(time) * 100)
-    
-        return hrs_to_mins + mins
+            # check if early dep
+            if dt.datetime.strptime(df.time_out, '%H:%M:%S').time() > end_time:
+                return 0
+            
+            early_secs = dt.timedelta(hours=end_time.hour, minutes=end_time.minute) - dt.timedelta(hours=dt.datetime.strptime(df.time_out,'%H:%M:%S').time().hour,
+                                                                                                   minutes=dt.datetime.strptime(df.time_out,'%H:%M:%S').time().minute)
+            return round(early_secs.seconds / 60)
 
     def deduct_late_arr(self,mins):
         return self.charge_late * mins
@@ -252,12 +444,16 @@ class Payslip():
     def pay_overtime(self,mins):
         return self.charge_ot * mins
     
+    @classmethod
+    def get_dict_months(cls):
+        return cls.dict_months
+    
 
 if __name__ == '__main__':
     from employee import Employee
 
     emp = Employee(23, 'Fatin Nurimah','Fatin','950323-34-3433',
-                   '13',1000,0.30,0,0.2)
+                   '13',1000,1,1,1)
     
     url = 'E:/RE001_06.XLS'
     Payslip(url, emp)
