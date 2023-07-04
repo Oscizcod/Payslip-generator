@@ -3,7 +3,6 @@ from PySide6.QtCore import Slot, Signal
 from employee import Employee
 
 
-
 class EmpDelLayout(QWidget):
     # create custom signal
     emp_updated = Signal()
@@ -19,7 +18,7 @@ class EmpDelLayout(QWidget):
     def initUI(self):
         # inputs and labels
         label_select_emp = QLabel()
-        label_select_emp.setText('Select employee: ')
+        label_select_emp.setText('Select employee to delete: ')
         self.combo_select_emp = QComboBox()
         self.combo_select_emp.addItems(self.get_combo_list())
         self.btn_del = QPushButton()
@@ -46,9 +45,14 @@ class EmpDelLayout(QWidget):
     def btn_del_clicked(self):
         # extract id from combobox text
         id = self.combo_select_emp.currentText()[-3:-1]
-
+        # get nric
+        nric = Employee.get_employees()[id].get_nric()
+        
         # delete employee from dict
         del Employee.get_employees()[id]
-
+        # delete nric and id
+        Employee.get_nric_employees().remove(nric)
+        Employee.get_id_employees().remove(id)
+        
         # emit signal 
         self.emp_updated.emit()

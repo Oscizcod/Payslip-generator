@@ -1,16 +1,26 @@
-from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QWidget, QMessageBox, QFileDialog,  QGroupBox, QCheckBox, QButtonGroup
+from PySide6.QtWidgets import QVBoxLayout, QLabel, QFormLayout, QLineEdit, QPushButton, QHBoxLayout, QWidget, QMessageBox, QGroupBox, QCheckBox, QButtonGroup
 from PySide6.QtGui import QRegularExpressionValidator, QDoubleValidator
 from PySide6.QtCore import Slot, Signal
 from employee import Employee
 from company import Company
 
 
-class EmpNewLayout(QWidget):
+class EmpEditLayout(QWidget):
     # create custom signal
     emp_updated = Signal()
 
-    def __init__(self):
+    def __init__(self, emp):
         super().__init__()
+        # get all instances from employee
+        self.emp_id = emp.get_id()
+        self.full_name = emp.get_full_name()
+        self.biometric_name = emp.get_biometric_name()
+        self.nric = emp.get_nric()
+        self.shifts = emp.get_shifts()
+        self.base_pay = emp.get_base_pay()
+        self.charge_ot = emp.get_charge_ot()
+        self.charge_early =emp.get_charge_early()
+        self.charge_late = emp.get_charge_late()
 
         # initialise UI
         self.initUI()
@@ -47,16 +57,19 @@ class EmpNewLayout(QWidget):
         self.edit_full_name = QLineEdit()
         validate_full_name = QRegularExpressionValidator(r'\D+')
         self.edit_full_name.setValidator(validate_full_name)
+        self.edit_full_name.setText(self.full_name)
         # biometric name
-        self. edit_biometric_name = QLineEdit()
+        self.edit_biometric_name = QLineEdit()
         validate_biometric_name = QRegularExpressionValidator(r'.+')
         self.edit_biometric_name.setPlaceholderText('Enter name exactly as in biometric device')
         self.edit_biometric_name.setValidator(validate_biometric_name)
+        self.edit_biometric_name.setText(self.biometric_name)
         # nric (unique id)
         self.edit_nric = QLineEdit()
         validate_nric = QRegularExpressionValidator(r'\d{6}-\d{2}-\d{4}')
         self.edit_nric.setPlaceholderText('E.g. 931102-03-2398')
         self.edit_nric.setValidator(validate_nric)
+        self.edit_nric.setText(self.nric)
 
         # add layouts
         frame_bio = QGroupBox('Biodata')
@@ -76,30 +89,39 @@ class EmpNewLayout(QWidget):
         # base pay 
         self.edit_base_pay = QLineEdit()
         self.edit_base_pay.setValidator(validate_charges)
-        self.edit_base_pay.setText('0')
+        self.edit_base_pay.setText(str(self.base_pay))
         # epf
         self.edit_epf_employer = QLineEdit()
         self.edit_epf_employer.setReadOnly(True)
+        self.edit_epf_employer.setText(str(round(Company.get_epf_employer() * self.base_pay, 2)))
         self.edit_epf_employee = QLineEdit()
         self.edit_epf_employee.setReadOnly(True)
+        self.edit_epf_employee.setText(str(round(Company.get_epf_employee() * self.base_pay, 2)))
         # eis
         self.edit_eis_employer = QLineEdit()
         self.edit_eis_employer.setReadOnly(True)
+        self.edit_eis_employer.setText(str(round(Company.get_eis_employer() * self.base_pay, 2)))
         self.edit_eis_employee = QLineEdit()
         self.edit_eis_employee.setReadOnly(True)
+        self.edit_eis_employee.setText(str(round(Company.get_eis_employee() * self.base_pay, 2)))
         # socso
         self.edit_socso_employer = QLineEdit()
         self.edit_socso_employer.setReadOnly(True)
+        self.edit_socso_employer.setText(str(round(Company.get_socso_employer() * self.base_pay, 2)))
         self.edit_socso_employee = QLineEdit()
         self.edit_socso_employee.setReadOnly(True)
+        self.edit_socso_employee.setText(str(round(Company.get_socso_employee() * self.base_pay, 2)))
         # ot
         self.edit_charge_overtime = QLineEdit()
         self.edit_charge_overtime.setValidator(validate_charges)
+        self.edit_charge_overtime.setText(str(self.charge_ot))
         # deductions - late arrival/ early dep
         self.edit_charge_late_arr = QLineEdit()
         self.edit_charge_late_arr.setValidator(validate_charges)
+        self.edit_charge_late_arr.setText(str(self.charge_late))
         self.edit_charge_early_dep = QLineEdit()
         self.edit_charge_early_dep.setValidator(validate_charges)
+        self.edit_charge_early_dep.setText(str(self.charge_early))
 
         # create layout
         # use form for all inputs
@@ -166,6 +188,8 @@ class EmpNewLayout(QWidget):
         layout_shift3.addWidget(label_shift3)
         layout_top_working.addWidget(label_instruction2)
         layout_top_working.addLayout(layout_shift3)
+        # check the shifts
+        self.check_shifts()
         # add layout to frame
         frame_working.setLayout(layout_top_working)
 
@@ -177,7 +201,7 @@ class EmpNewLayout(QWidget):
         # details all validated, save to text file
         if self.is_ready_for_saving() :
             # check if duplicate entry (nric is unique)
-            if self.edit_nric.text() not in Employee.get_nric_employees():
+            if self.edit_nric.text() not in Employee.employees:
                 # determine shifts
                 if self.checkbox_shift1.isChecked():
                     shifts = '1'
@@ -186,20 +210,22 @@ class EmpNewLayout(QWidget):
 
                 if self.checkbox_shift3.isChecked():
                     shifts += '3'
-                
-                # generate id and add to list
-                emp_id = Employee.generate_emp_id()
-                Employee.get_id_employees().append(emp_id)
-                # add nric to list
-                Employee.get_nric_employees().append(self.edit_nric.text())
 
-
-                # add employee to existing dictionary of employees
-                Employee.get_employees()[emp_id] = Employee(emp_id, self.edit_full_name.text().upper().strip(), self.edit_biometric_name.text().strip(), 
-                                                                           self.edit_nric.text(), shifts, float(self.edit_base_pay.text()), 
-                                                                           float(self.edit_charge_overtime.text()), float(self.edit_charge_late_arr.text()),
-                                                                           float(self.edit_charge_early_dep.text()))
+                # make necessary changes
+                Employee.get_employees()[self.emp_id].set_full_name(self.edit_full_name.text().upper().strip())
+                Employee.get_employees()[self.emp_id].set_biometric_name(self.edit_biometric_name.text().strip())
+                Employee.get_employees()[self.emp_id].set_nric(self.edit_nric.text())
+                Employee.get_employees()[self.emp_id].set_shifts(shifts)
+                Employee.get_employees()[self.emp_id].set_base_pay(float(self.edit_base_pay.text()))
+                Employee.get_employees()[self.emp_id].set_charge_ot(float(self.edit_charge_overtime.text()))
+                Employee.get_employees()[self.emp_id].set_charge_late(float(self.edit_charge_late_arr.text()))
+                Employee.get_employees()[self.emp_id].set_charge_early(float(self.edit_charge_early_dep.text()))
                         
+                # remove old nric and replace with new one
+                # do even if not necessarily changed
+                Employee.get_nric_employees().remove(self.nric)
+                Employee.get_nric_employees().append(self.edit_nric.text())
+                
                 # emit signal
                 self.emp_updated.emit()
             else:
@@ -237,3 +263,14 @@ class EmpNewLayout(QWidget):
         # calculate socso
         self.edit_socso_employee.setText(str(round(Company.get_socso_employee() * float(text), 2)))
         self.edit_socso_employer.setText(str(round(Company.get_socso_employer() * float(text), 2)))
+
+    def check_shifts(self):
+        # if 2 shifts, one is definitely shift 3
+        if len(self.shifts) == 2:
+            self.checkbox_shift3.setChecked(True)
+
+        # check the single shift
+        if self.shifts[0] == '1':
+            self.checkbox_shift1.setChecked(True)
+        else:
+            self.checkbox_shift2.setChecked(True)

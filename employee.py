@@ -4,10 +4,11 @@ import random
 
 class Employee():
     employees = {}
+    nric_employees = []
     id_employees = []
     URL_emps = 'employees.txt'
 
-    def __init__(self, id, full_name, biometric_name, nric, shifts='13',
+    def __init__(self, id='0', full_name='', biometric_name='', nric='', shifts='13',
                  base_pay=0, charge_ot=0, charge_late=0,
                  charge_early=0):
         # instantiate all instance vars
@@ -20,33 +21,65 @@ class Employee():
         self.charge_ot = charge_ot
         self.charge_late = charge_late
         self.charge_early = charge_early
-
+    
     def get_id(self):
         return self.id
     
     def get_full_name(self):
         return self.full_name
     
+    def set_full_name(self, full_name):
+        self.full_name = full_name
+    
     def get_nric(self):
         return self.nric
     
+    def set_nric(self, nric):
+        self.nric = nric
+    
     def get_shifts(self):
         return self.shifts
+    
+    def set_shifts(self, shifts):
+        self.shifts = shifts
 
     def get_charge_ot(self):
         return self.charge_ot
+    
+    def set_charge_ot(self, charge_ot):
+        self.charge_ot = charge_ot
 
     def get_charge_late(self):
         return self.charge_late
 
+    def set_charge_late(self, charge_late):
+        self.charge_late = charge_late
+
     def get_charge_early(self):
         return self.charge_early
     
+    def set_charge_early(self, charge_early):
+        self.charge_early = charge_early 
+
     def get_biometric_name(self):
         return self.biometric_name
-    
+
+    def set_biometric_name(self, biometric_name):
+        self.biometric_name = biometric_name
+
     def get_base_pay(self):
         return self.base_pay
+    
+    def set_base_pay(self, base_pay):
+        self.base_pay = base_pay
+
+    @classmethod
+    def get_id_employees(cls):
+        return cls.id_employees
+
+    @classmethod
+    def get_nric_employees(cls):
+        return cls.nric_employees
     
     @classmethod
     def get_employees(cls):
@@ -74,6 +107,9 @@ class Employee():
                     
                     # populate list of employee ids
                     cls.id_employees.append(emp_details[0])
+
+                    # populate list of employee nrics
+                    cls.nric_employees.append(emp_details[3])
         else:
             pass
 

@@ -12,7 +12,7 @@ class Company():
               '2':{('Mon', 'Tue', 'Wed', 'Thurs', 'Fri'):[time(8,0), time(13,0)]},
               '3':{('Sat',):[time(8,0), time(13,0)]}
               }
-    closed = ['Sun', 'Tue', 'Wed']
+    closed = ['Sun']
     dict_days = {'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thurs': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'}
 
     # define getter and setter methods for each of the class variables

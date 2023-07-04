@@ -11,7 +11,7 @@ class Payslip():
     dict_months = {'01': 'January', '02': 'February', '03': 'March', '04':'April', '05': 'May', '06': 'June',
                    '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
 
-    def __init__(self, url_attn_file, emp):
+    def __init__(self, url_attn_file, emp, al, public_hol, allowance_rm, allowance_remark):
         self.url_attn_file = url_attn_file
         # get the employee instance varibles
         self.full_name = emp.get_full_name()
@@ -24,6 +24,13 @@ class Payslip():
         self.charge_early = emp.get_charge_early()
         # get employee's working hours
         self.working_hours = self.get_working_hours()
+        # get closed days
+        self.closed_days = Company.get_closed()
+        # get allowance, leave and hols
+        self.al = al
+        self.public_hol = public_hol
+        self.allowance_rm = allowance_rm
+        self.allowance_remark = allowance_remark
 
         # get company payment details
         # epf
@@ -39,9 +46,7 @@ class Payslip():
         self.generate_records()
     
     def generate_records(self):
-        # url_xls = self.xml_to_xls()
-        # CHANGE BACK LATER! UNCOMMENT TOP AND CHANGE DELETE URL BOTTOM
-        url_xls = './old-attendance/RE001_06.XLS'
+        url_xls = self.xml_to_xls()
         clean_df = self.clean_data(url_xls)
         self.write_payslip(clean_df)  # generate payslip
         self.write_attendance(clean_df)  # generate attendance
@@ -87,11 +92,9 @@ class Payslip():
             f.write('RM {}'.format(self.base_pay).rjust(total_width-9))
             f.write('\n')
             # allowance
-            # CHANGE LATER!
-            allowance = 'Allowance: {}'.format('fill_later')
+            allowance = 'Allowance: {}'.format(self.allowance_remark)
             f.write(allowance)
-            allowance_rm = 0
-            f.write('RM {}'.format(allowance_rm).rjust(total_width-len(allowance)))
+            f.write('RM {}'.format(self.allowance_rm).rjust(total_width-len(allowance)))
             f.write('\n')
             # overtime
             ot = 'Overtime'
@@ -133,7 +136,7 @@ class Payslip():
             # nett salary
             nett_salary = 'Nett salary'
             f.write(nett_salary)
-            nett_rm = self.base_pay + allowance_rm + self.ot_rm - epf_employee_rm - eis_employee_rm - socso_employee_rm - self.misc_deduct_rm
+            nett_rm = self.base_pay + self.allowance_rm + self.ot_rm - epf_employee_rm - eis_employee_rm - socso_employee_rm - self.misc_deduct_rm
             f.write('RM {}'.format(str(nett_rm)).rjust(total_width-len(nett_salary)))
             f.write('\n')
             f.write('-' * total_width)
@@ -169,32 +172,33 @@ class Payslip():
             f.write('\n\n')
             total_days = 'Total days in the month'
             f.write(total_days)
-            f.write('{}'.format(self.days_df).rjust(total_width-len(total_days)))
+            f.write('{}'.format(str(self.days_df)).rjust(total_width-len(total_days)))
             f.write('\n')
             # closed
             closed_days = 'Closed'
             f.write(closed_days)
-            f.write('{}'.format('fill_later').rjust(total_width-len(closed_days)))
+            f.write('{}'.format(str(self.count_closed_days)).rjust(total_width-len(closed_days)))
             f.write('\n')
             # public hols
-            public_holidays = 'Public holidays'
-            f.write(public_holidays)
-            f.write('{}'.format('fill_later').rjust(total_width-len(public_holidays)))
+            title_public_holidays = 'Public holidays'
+            f.write(title_public_holidays)
+            f.write('{}'.format(str(self.public_hol)).rjust(total_width-len(title_public_holidays)))
             f.write('\n')
             # annual leave
-            annual_leave = 'Annual leave'
-            f.write(annual_leave)
-            f.write('{}'.format('fill_later').rjust(total_width-len(annual_leave)))
+            title_annual_leave = 'Annual leave'
+            f.write(title_annual_leave)
+            f.write('{}'.format(str(self.al)).rjust(total_width-len(title_annual_leave)))
             f.write('\n')
             # medical leave
-            med_leave = 'Medical leave'
-            f.write(med_leave)
-            f.write('{}'.format('fill_later').rjust(total_width-len(med_leave)))
+            title_med_leave = 'Medical leave'
+            f.write(title_med_leave)
+            med_leave = self.days_df - self.count_closed_days - self.public_hol - self.al - self.count_worked_days
+            f.write('{}'.format(str(med_leave)).rjust(total_width-len(title_med_leave)))
             f.write('\n')
             # days worked
             worked_days = 'Total days worked'
             f.write(worked_days)
-            f.write('{}'.format('fill_later').rjust(total_width-len(worked_days)))
+            f.write('{}'.format(str(self.count_worked_days)).rjust(total_width-len(worked_days)))
 
     def xml_to_xls(self):
         # extract file name
@@ -234,9 +238,9 @@ class Payslip():
         date_df = df.iloc[3,12]
         regex_dates = r'\d{2}'
         dates_df = re.findall(regex_dates, date_df)
-        self.year_df = '20' + dates_df[0]
+        self.year_df = int('20' + dates_df[0])
         self.month_df = self.get_dict_months()[dates_df[1]]
-        self.days_df = dates_df[-1]
+        self.days_df = int(dates_df[-1])
 
         # determine number of staff
         num_rows = df.shape[0]
@@ -255,12 +259,20 @@ class Payslip():
             time_out = []
     
             if self.biometric_name == df_name:
+                # initialise counters for num of closed days and total days worked
+                self.count_closed_days = 0
+                self.count_worked_days = 0
+
                 # iterate through dates in first half of month
                 for j, row in df.iloc[25*(i-1) + 8:25*i -1].iterrows():
                     date.append(row[0])
                     day.append(row[1])
                     timings = []
             
+                    # check if closed day
+                    if row[1] in self.closed_days:
+                        self.count_closed_days += 1
+
                     # collect all timings
                     for k in range(2,8):
                         try:
@@ -277,7 +289,7 @@ class Payslip():
                             continue
                     
                     # decide which start time to use depending on day
-                    for days, time in self.working_hours.items():
+                    for days, time in self.working_hours.items():                            
                         if row[1] in days:
                             start_time = time[0]
                             end_time = time[1]
@@ -288,6 +300,9 @@ class Payslip():
                         time_out.append('-')
                     # if single time value, use 12 PM as demarcation if time in/out
                     elif len(timings) == 1:
+                        # count as working day
+                        self.count_worked_days += 1
+
                         if timings[0] > dt.time(12,0):
                             time_out.append(str(timings[0]))
                             time_in.append(str(start_time))
@@ -296,6 +311,9 @@ class Payslip():
                             time_out.append(str(end_time))
                     # for all other lengths, find min/max
                     else:
+                        # count as working day
+                        self.count_worked_days += 1
+                        
                         time_in.append(str(min(timings)))
                         time_out.append(str(max(timings)))
               
@@ -305,6 +323,10 @@ class Payslip():
                     if type(row[8]) == float:
                         break
             
+                    # check if closed day
+                    if row[1] in self.closed_days:
+                        self.count_closed_days += 1
+
                     # continue if got date
                     date.append(row[8])
                     day.append(row[9])
@@ -337,6 +359,9 @@ class Payslip():
                         time_out.append('-')
                     # if single time value, use 12 PM as demarcation if time in/out
                     elif len(timings) == 1:
+                        # count as working day
+                        self.count_worked_days += 1
+
                         if timings[0] > dt.time(12,0):
                             time_out.append(str(timings[0]))
                             time_in.append(str(start_time))
@@ -345,6 +370,9 @@ class Payslip():
                             time_out.append(str(end_time))
                      # for all other lengths, find min/max
                     else:
+                        # count as working day
+                        self.count_worked_days += 1
+
                         time_in.append(str(min(timings)))
                         time_out.append(str(max(timings)))
                 
