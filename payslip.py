@@ -6,6 +6,7 @@ import pandas as pd
 from company import Company
 import os
 import datetime as dt
+from PySide6.QtWidgets import QMessageBox
 
 class Payslip():
     dict_months = {'01': 'January', '02': 'February', '03': 'March', '04':'April', '05': 'May', '06': 'June',
@@ -42,14 +43,27 @@ class Payslip():
         # socso
         self.socso_employee = Company.get_socso_employee()
         self.socso_employer = Company.get_socso_employer()
-
-        self.generate_records()
     
     def generate_records(self):
-        url_xls = self.xml_to_xls()
-        clean_df = self.clean_data(url_xls)  # generate clean data as log csv file
-        self.write_payslip()  # generate payslip
-        self.write_attendance(clean_df)  # generate attendance
+        # catch all exceptions
+        try:
+            url_xls = self.xml_to_xls()
+            clean_df = self.clean_data(url_xls)  # generate clean data as log csv file
+            self.write_payslip()  # generate payslip
+            self.write_attendance(clean_df)  # generate attendance
+
+            # execution successful
+            return True
+        
+        except:
+            # generate error message box
+            err_box = QMessageBox()
+            err_box.setText("Error")
+            err_box.setInformativeText("Your files could not be generated. Please refer to the manual to troubleshoot potential problems.")
+            err_box.setStandardButtons(QMessageBox.Ok)
+            err_box.exec()
+
+            return False
 
     def write_attendance(self, df):
         with open('./new-attendance/{}_attendance_{}_{}.txt'.format(self.biometric_name, self.month_df, self.year_df), 'w', encoding='utf-8') as f:

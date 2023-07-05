@@ -114,13 +114,15 @@ class EmpPaySlipSelLayout(QWidget):
                     emp = Employee.get_employees()[id]
                 
                     # pass employee instance into Payslip class
-                    Payslip(self.input_attn_url.text(), emp, int(self.edit_al.text()), int(self.edit_public_hol.text()),
-                            float(self.edit_allowance_rm.text()), self.edit_allowance_remark.text())
+                    is_executed = Payslip(self.input_attn_url.text(), emp, int(self.edit_al.text()), int(self.edit_public_hol.text()),
+                            float(self.edit_allowance_rm.text()), self.edit_allowance_remark.text()).generate_records()
                     
-                    # message box indicating successful generation of files
-                    success_box = QMessageBox.information(self, "Success",
-                                                          "Your files have been successfully generated!",
-                                                          QMessageBox.Ok)
+                    # successful execution
+                    if is_executed:
+                        # message box indicating successful generation of files
+                        QMessageBox.information(self, "Success",
+                                                "Your files have been successfully generated!",
+                                                QMessageBox.Ok)
                 else:
                     self.error_box()
             else:
