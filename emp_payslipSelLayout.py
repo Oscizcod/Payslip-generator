@@ -41,6 +41,12 @@ class EmpPaySlipSelLayout(QWidget):
         self.edit_public_hol = QLineEdit()
         self.edit_public_hol.setText('0')
         self.edit_public_hol.setValidator(validator_leave)
+        # closed for personal reasons
+        label_close_personal = QLabel()
+        label_close_personal.setText('Closed (personal reasons): ')
+        self.edit_close_personal = QLineEdit()
+        self.edit_close_personal.setText('0')
+        self.edit_close_personal.setValidator(validator_leave)
         # for allowance
         # validator for allowance amount
         validator_allowance = QDoubleValidator()
@@ -77,6 +83,10 @@ class EmpPaySlipSelLayout(QWidget):
         layout_public_hol = QHBoxLayout()
         layout_public_hol.addWidget(label_public_hol)
         layout_public_hol.addWidget(self.edit_public_hol)
+        # for inputting closed due to personal reasons
+        layout_close_personal = QHBoxLayout()
+        layout_close_personal.addWidget(label_close_personal)
+        layout_close_personal.addWidget(self.edit_close_personal)
         # for inputting allowance remark
         layout_allowance_remark = QHBoxLayout()
         layout_allowance_remark.addWidget(label_allowance_remark)
@@ -90,6 +100,7 @@ class EmpPaySlipSelLayout(QWidget):
         layout_top.addLayout(layout_browse)
         layout_top.addLayout(layout_al)
         layout_top.addLayout(layout_public_hol)
+        layout_top.addLayout(layout_close_personal)
         layout_top.addLayout(layout_allowance_remark)
         layout_top.addLayout(layout_allowance_rm)
         layout_top.addWidget(self.btn_payslip)
@@ -115,7 +126,8 @@ class EmpPaySlipSelLayout(QWidget):
                 
                     # pass employee instance into Payslip class
                     is_executed = Payslip(self.input_attn_url.text(), emp, int(self.edit_al.text()), int(self.edit_public_hol.text()),
-                            float(self.edit_allowance_rm.text()), self.edit_allowance_remark.text()).generate_records()
+                                          int(self.edit_close_personal.text()), float(self.edit_allowance_rm.text()),
+                                          self.edit_allowance_remark.text()).generate_records()
                     
                     # successful execution
                     if is_executed:

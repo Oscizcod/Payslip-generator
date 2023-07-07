@@ -2,6 +2,9 @@
 __pycache__/
 employees.txt
 constants.py
+
+# jupyter nb used for testing data analysis
+*.ipynb
 .ipynb_checkpoints
 
 # generated dirs for co docs

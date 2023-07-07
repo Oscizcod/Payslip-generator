@@ -19,16 +19,11 @@ class CoSummLayout(QWidget):
         label_epf_employer.setText('Employer: ' + str(Company.get_epf_employer()*100) + '%')
         label_epf_employee = QLabel()
         label_epf_employee.setText('Employee: ' + str(Company.get_epf_employee()*100) + '%')
-        # eis
-        label_eis_employer = QLabel()
-        label_eis_employer.setText('Employer: ' + str(Company.get_eis_employer()*100) + '%')
-        label_eis_employee = QLabel()
-        label_eis_employee.setText('Employee: ' + str(Company.get_eis_employee()*100) + '%')
         # socso
         label_socso_employer = QLabel()
-        label_socso_employer.setText('Employer: ' + str(Company.get_socso_employer()*100) + '%')
+        label_socso_employer.setText('Employer: RM ' + str(Company.get_socso_employer()))
         label_socso_employee = QLabel()
-        label_socso_employee.setText('Employee: ' + str(Company.get_socso_employee()*100) + '%')
+        label_socso_employee.setText('Employee: RM ' + str(Company.get_socso_employee()))
         #shifts
         layout_shifts = self.shiftsUI()
         layout_closed = self.closedDaysUI()
@@ -47,14 +42,8 @@ class CoSummLayout(QWidget):
         frame_epf.layout().addWidget(label_epf_employer)
         frame_epf.layout().addWidget(label_epf_employee)
         self.layout().addWidget(frame_epf)
-         # eis
-        frame_eis = QGroupBox('Insurance')
-        frame_eis.setLayout(QVBoxLayout())
-        frame_eis.layout().addWidget(label_eis_employer)
-        frame_eis.layout().addWidget(label_eis_employee)
-        self.layout().addWidget(frame_eis)
-         # socso
-        frame_socso = QGroupBox('Insurance')
+        # socso
+        frame_socso = QGroupBox('SOCSO')
         frame_socso.setLayout(QVBoxLayout())
         frame_socso.layout().addWidget(label_socso_employer)
         frame_socso.layout().addWidget(label_socso_employee)

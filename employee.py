@@ -1,6 +1,8 @@
 import os.path
 import os
 import random
+import datetime as dt
+from dateutil.relativedelta import relativedelta
 
 class Employee():
     employees = {}
@@ -21,7 +23,30 @@ class Employee():
         self.charge_ot = charge_ot
         self.charge_late = charge_late
         self.charge_early = charge_early
+        self.age = self.calculate_age()
+        self.eis = self.calculate_eis(self.age)
     
+    def calculate_eis(self, age):
+        if age < 18:
+            return 0
+        return 2.9
+
+    def calculate_age(self):
+        if self.nric == '':
+            return 0
+        
+        # extract day, month and year from nric
+        year = int('20' + self.nric[:2])
+        month = int(self.nric[2:4])
+        day = int(self.nric[4:6])
+        dob = dt.date(year, month, day)
+
+        # get today's date
+        today = dt.date.today()
+
+        # get age in years
+        return relativedelta(today, dob).years
+
     def get_id(self):
         return self.id
     
@@ -72,6 +97,9 @@ class Employee():
     
     def set_base_pay(self, base_pay):
         self.base_pay = base_pay
+
+    def get_eis(self):
+        return self.eis
 
     @classmethod
     def get_id_employees(cls):

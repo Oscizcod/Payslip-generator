@@ -97,20 +97,13 @@ class EmpEditLayout(QWidget):
         self.edit_epf_employee = QLineEdit()
         self.edit_epf_employee.setReadOnly(True)
         self.edit_epf_employee.setText(str(round(Company.get_epf_employee() * self.base_pay, 2)))
-        # eis
-        self.edit_eis_employer = QLineEdit()
-        self.edit_eis_employer.setReadOnly(True)
-        self.edit_eis_employer.setText(str(round(Company.get_eis_employer() * self.base_pay, 2)))
-        self.edit_eis_employee = QLineEdit()
-        self.edit_eis_employee.setReadOnly(True)
-        self.edit_eis_employee.setText(str(round(Company.get_eis_employee() * self.base_pay, 2)))
         # socso
         self.edit_socso_employer = QLineEdit()
         self.edit_socso_employer.setReadOnly(True)
-        self.edit_socso_employer.setText(str(round(Company.get_socso_employer() * self.base_pay, 2)))
+        self.edit_socso_employer.setText(str(Company.get_socso_employer()))
         self.edit_socso_employee = QLineEdit()
         self.edit_socso_employee.setReadOnly(True)
-        self.edit_socso_employee.setText(str(round(Company.get_socso_employee() * self.base_pay, 2)))
+        self.edit_socso_employee.setText(str(Company.get_socso_employee()))
         # ot
         self.edit_charge_overtime = QLineEdit()
         self.edit_charge_overtime.setValidator(validate_charges)
@@ -131,9 +124,6 @@ class EmpEditLayout(QWidget):
         # epf
         layout_payment.addRow('EPF Employer contribution: RM', self.edit_epf_employer)
         layout_payment.addRow('EPF Employee contribution: RM', self.edit_epf_employee)
-        # eis
-        layout_payment.addRow('EIS Employer contribution: RM', self.edit_eis_employer)
-        layout_payment.addRow('EIS Employee contribution: RM', self.edit_eis_employee)
         # socso
         layout_payment.addRow('Socso Employer contribution: RM', self.edit_socso_employer)
         layout_payment.addRow('Socso Employee contribution: RM', self.edit_socso_employee)
@@ -257,12 +247,9 @@ class EmpEditLayout(QWidget):
         # calculate epf
         self.edit_epf_employee.setText(str(round(Company.get_epf_employee() * float(text), 2)))
         self.edit_epf_employer.setText(str(round(Company.get_epf_employer() * float(text), 2)))
-        # calculate eis
-        self.edit_eis_employee.setText(str(round(Company.get_eis_employee() * float(text), 2)))
-        self.edit_eis_employer.setText(str(round(Company.get_eis_employer() * float(text), 2)))
         # calculate socso
-        self.edit_socso_employee.setText(str(round(Company.get_socso_employee() * float(text), 2)))
-        self.edit_socso_employer.setText(str(round(Company.get_socso_employer() * float(text), 2)))
+        self.edit_socso_employee.setText(str(Company.get_socso_employee()))
+        self.edit_socso_employer.setText(str(Company.get_socso_employer()))
 
     def check_shifts(self):
         # if 2 shifts, one is definitely shift 3

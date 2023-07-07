@@ -15,3 +15,9 @@ main_window.show()
 
 # start event loop listener
 app.exec()
+
+
+# put in option to generate payslip according to base pay
+# modify the UI
+# install on MacOS
+# learn how to update patches

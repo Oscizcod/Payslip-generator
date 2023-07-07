@@ -12,7 +12,7 @@ class Payslip():
     dict_months = {'01': 'January', '02': 'February', '03': 'March', '04':'April', '05': 'May', '06': 'June',
                    '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
 
-    def __init__(self, url_attn_file, emp, al, public_hol, allowance_rm, allowance_remark):
+    def __init__(self, url_attn_file, emp, al, public_hol, close_personal, allowance_rm, allowance_remark):
         self.url_attn_file = url_attn_file
         # get the employee instance varibles
         self.full_name = emp.get_full_name()
@@ -23,6 +23,9 @@ class Payslip():
         self.charge_ot = emp.get_charge_ot()
         self.charge_late = emp.get_charge_late()
         self.charge_early = emp.get_charge_early()
+        # eis
+        self.eis_employee = emp.get_eis()
+        self.eis_employer = emp.get_eis()
         # get employee's working hours
         self.working_hours = self.get_working_hours()
         # get closed days
@@ -30,6 +33,7 @@ class Payslip():
         # get allowance, leave and hols
         self.al = al
         self.public_hol = public_hol
+        self.close_personal = close_personal
         self.allowance_rm = allowance_rm
         self.allowance_remark = allowance_remark
 
@@ -37,9 +41,6 @@ class Payslip():
         # epf
         self.epf_employee = Company.get_epf_employee()
         self.epf_employer = Company.get_epf_employer()
-        # eis
-        self.eis_employee = Company.get_eis_employee()
-        self.eis_employer = Company.get_eis_employer()
         # socso
         self.socso_employee = Company.get_socso_employee()
         self.socso_employer = Company.get_socso_employer()
@@ -184,14 +185,12 @@ class Payslip():
             # eis
             eis_empe = 'Employee EIS'
             f.write(eis_empe)
-            eis_employee_rm = round(self.eis_employee * self.base_pay, 2)
-            f.write('RM {}'.format(str(eis_employee_rm)).rjust(total_width-len(eis_empe)))
+            f.write('RM {}'.format(str(self.eis_employee)).rjust(total_width-len(eis_empe)))
             f.write('\n')
             # socso
             socso_empe = 'Employee SOCSO'
             f.write(socso_empe)
-            socso_employee_rm = round(self.socso_employee * self.base_pay, 2)
-            f.write('RM {}'.format(str(socso_employee_rm)).rjust(total_width-len(socso_empe)))
+            f.write('RM {}'.format(str(self.socso_employee)).rjust(total_width-len(socso_empe)))
             f.write('\n')
             # late arrival / early departure
             misc_deduct = 'Late arrival/ early departure'
@@ -204,7 +203,7 @@ class Payslip():
             # nett salary
             nett_salary = 'Nett salary'
             f.write(nett_salary)
-            nett_rm = self.base_pay + self.allowance_rm + self.ot_rm - epf_employee_rm - eis_employee_rm - socso_employee_rm - self.misc_deduct_rm
+            nett_rm = round(self.base_pay + self.allowance_rm + self.ot_rm - epf_employee_rm - self.eis_employee - self.socso_employee - self.misc_deduct_rm, 2)
             f.write('RM {}'.format(str(nett_rm)).rjust(total_width-len(nett_salary)))
             f.write('\n')
             f.write('-' * total_width)
@@ -222,13 +221,12 @@ class Payslip():
             # eis
             eis_empr = 'Employer EIS'
             f.write(eis_empr)
-            eis_employer_rm = round(self.eis_employer * self.base_pay, 2)
-            f.write('RM {}'.format(str(eis_employer_rm)).rjust(total_width-len(eis_empr)))
+            f.write('RM {}'.format(str(self.eis_employer)).rjust(total_width-len(eis_empr)))
             f.write('\n')
             # socso
             socso_empr = 'Employer SOCSO'
             f.write(socso_empr)
-            socso_employer_rm = round(self.socso_employer * self.base_pay, 2)
+            socso_employer_rm = round(self.socso_employer, 2)
             f.write('RM {}'.format(str(socso_employer_rm)).rjust(total_width-len(socso_empr)))
             f.write('\n')
             f.write('-' * total_width)
@@ -252,6 +250,11 @@ class Payslip():
             f.write(title_public_holidays)
             f.write('{}'.format(str(self.public_hol)).rjust(total_width-len(title_public_holidays)))
             f.write('\n')
+            # closed for personal reasons
+            title_close_personal = 'Closed (personal reasons)'
+            f.write(title_close_personal)
+            f.write('{}'.format(str(self.close_personal)).rjust(total_width-len(title_close_personal)))
+            f.write('\n')
             # annual leave
             title_annual_leave = 'Annual leave'
             f.write(title_annual_leave)
@@ -260,7 +263,7 @@ class Payslip():
             # medical leave
             title_med_leave = 'Medical leave'
             f.write(title_med_leave)
-            med_leave = self.days_df - self.count_closed_days - self.public_hol - self.al - self.count_worked_days
+            med_leave = self.days_df - self.count_closed_days - self.public_hol - self.al - self.close_personal - self.count_worked_days
             f.write('{}'.format(str(med_leave)).rjust(total_width-len(title_med_leave)))
             f.write('\n')
             # days worked
@@ -461,8 +464,8 @@ class Payslip():
         # calculate mins and charges
         self.ot_mins = df_emp.overtime_mins.sum()
         self.misc_deduct_mins = df_emp.late_arr_mins.sum() + df_emp.early_dep_mins.sum()
-        self.ot_rm = df_emp.pay_overtime.sum()
-        self.misc_deduct_rm = df_emp.deduct_late_arr.sum() + df_emp.deduct_early_dep.sum()
+        self.ot_rm = round(df_emp.pay_overtime.sum(), 2)
+        self.misc_deduct_rm = round(df_emp.deduct_late_arr.sum() + df_emp.deduct_early_dep.sum(), 2)
 
         # write to file
         df_emp.to_csv('./log/{}_attendance_log.csv'.format(self.biometric_name), index=False) 
